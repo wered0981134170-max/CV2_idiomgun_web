@@ -119,10 +119,11 @@ def process_frame():
             if res.hand_landmarks:
                 lm = res.hand_landmarks[0]
                 gs["last_seen"] = time.time()
-                if lm[4].y < lm[3].y and lm[4].y < lm[5].y:
+                # 食指朝上：食指尖(8) 高於掌骨根(5)，中指彎曲(12>10)
+                if lm[8].y < lm[5].y and lm[12].y > lm[10].y:
                     thumb_mode = True
-                    nx = max(35, min(W-35,  int(lm[4].x * W)))
-                    ny = max(55, min(int(H*0.82), int(lm[4].y * H)))
+                    nx = max(35, min(W-35,  int(lm[8].x * W)))
+                    ny = max(55, min(int(H*0.82), int(lm[8].y * H)))
                     gs["cursor_x"] = int(SMOOTH * gs["cursor_x"] + (1-SMOOTH)*nx)
                     gs["cursor_y"] = int(SMOOTH * gs["cursor_y"] + (1-SMOOTH)*ny)
                     gs["last_valid_x"] = gs["cursor_x"]
@@ -218,13 +219,13 @@ def get_question():
             "score":       gs["score"],
             "remain":      round(remain, 2),
             "q_time":      Q_TIME_LIMIT,
-            "type":        q["type"],
-            "idiom":       q["idiom"],
+            "type":        q.get("type", "wrong"),
+            "idiom":       q.get("idiom", ""),
             "display":     q.get("display", ""),
             "template":    q.get("template", ""),
             "options":     q.get("options", []),
-            "hint":        q["hint"],
-            "difficulty": q.get("difficulty", "unknown"),
+            "hint":        q.get("hint", ""),
+            "difficulty":  q.get("difficulty", "easy"),
             "explanation": q.get("explanation", ""),
         })
 

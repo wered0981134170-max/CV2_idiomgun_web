@@ -60,10 +60,17 @@ function detectHands(video) {
   if (res.landmarks && res.landmarks.length > 0) {
     const lm = res.landmarks[0];
     lastSeenTime = now;
-    if (lm[4].y < lm[3].y && lm[4].y < lm[5].y) {
-      const rx = 1 - lm[4].x;
+
+    // 食指朝上判斷：
+    // 食指尖(8) 高於食指掌骨根(5)
+    // 中指尖(12) 低於中指第一關節(10)（其他手指彎曲）
+    const indexUp  = lm[8].y < lm[5].y;
+    const middleDown = lm[12].y > lm[10].y;
+
+    if (indexUp && middleDown) {
+      const rx = 1 - lm[8].x;
       const tx = Math.max(0.02, Math.min(0.98, rx))       * window.innerWidth;
-      const ty = Math.max(0.04, Math.min(0.90, lm[4].y))  * window.innerHeight;
+      const ty = Math.max(0.04, Math.min(0.90, lm[8].y))  * window.innerHeight;
       smoothX = SMOOTH * smoothX + (1 - SMOOTH) * tx;
       smoothY = SMOOTH * smoothY + (1 - SMOOTH) * ty;
       lastValidX = smoothX; lastValidY = smoothY;
@@ -161,7 +168,7 @@ await startCamera();
   <div class="panel">
     <div class="game-title">成語闖關</div>
     <div class="game-subtitle">IDIOM SHOOTER · GESTURE CONTROL</div>
-    <div class="start-hint">豎起大拇指 · 停留 1.5 秒 · 開始遊戲</div>
+    <div class="start-hint">伸出食指 · 停留 1.5 秒 · 開始遊戲</div>
 
     <!-- 玩家名稱輸入 -->
     <div style="margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:6px">
@@ -220,7 +227,7 @@ await startCamera();
     </div>
 
     <div id="result-next-hint">
-      <div class="result-next" id="result-next" style="display:none">▶ 比大拇指 5 秒繼續</div>
+      <div class="result-next" id="result-next" style="display:none">▶ 伸出食指 5 秒繼續</div>
       <div style="display:none;margin-top:14px;justify-content:center" id="result-ring-wrap">
         <svg width="48" height="48" viewBox="0 0 48 48">
           <circle cx="24" cy="24" r="18" stroke="rgba(255,255,255,.1)" stroke-width="3" fill="none"/>
@@ -281,7 +288,6 @@ await startCamera();
   </div>
 </div>
 
-<script src="/static/timer.js"></script>
 <script src="/static/audio.js"></script>
 <script src="/static/effects.js"></script>
 <script>
@@ -657,7 +663,7 @@ const Game = (() => {
       }, 2000);
     } else {
       const secLabel = resultHoverTime === 5.0 ? '5' : '1.5';
-      $('result-next').textContent = `▶ 比大拇指 ${secLabel} 秒繼續`;
+      $('result-next').textContent = `▶ 伸出食指 ${secLabel} 秒繼續`;
       show($('result-next'));
       $('result-ring-wrap').style.display = 'flex';
       hide($('result-auto-hint'));

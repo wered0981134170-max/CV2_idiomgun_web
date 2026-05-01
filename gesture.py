@@ -1,31 +1,24 @@
-#gesture.py──手勢判斷模組
-#提供is_thumb_up(landmarks)給主程式使用
+# gesture.py  ── 手勢判斷模組（食指版）
 
-
-
-def is_thumb_up(landmarks) -> bool:
-
-    # 規則：拇指尖端(4) 高於關節(3)，且高於食指根(5) → 拇指朝上
-    if not landmarks or len(landmarks) < 6:
+def is_index_up(landmarks) -> bool:
+    """
+    食指朝上判斷：
+    - 食指尖(8) 高於食指掌骨根(5)
+    - 中指尖(12) 低於中指第一關節(10)（確保其他手指彎曲）
+    """
+    if not landmarks or len(landmarks) < 13:
         return False
-    tip    = landmarks[4]   # 拇指尖
-    joint  = landmarks[3]   # 拇指第一關節
-    idx_base = landmarks[5] # 食指掌骨根
-
-    # y 座標在影像座標系：值越小越高
-    return tip.y < joint.y and tip.y < idx_base.y
+    return landmarks[8].y < landmarks[5].y and landmarks[12].y > landmarks[10].y
 
 
-def thumb_tip_pos(landmarks, frame_w: int, frame_h: int,
+def index_tip_pos(landmarks, frame_w: int, frame_h: int,
                   safe_l=35, safe_r=None, safe_t=55, safe_b=None) -> tuple[int, int]:
-    
-    #取得拇指尖在畫面中的像素座標
+    """取得食指尖在畫面中的像素座標"""
     if safe_r is None:
         safe_r = frame_w - 35
     if safe_b is None:
         safe_b = int(frame_h * 0.82)
-
-    tip = landmarks[4]
+    tip = landmarks[8]
     nx  = max(safe_l, min(safe_r, int(tip.x * frame_w)))
     ny  = max(safe_t, min(safe_b, int(tip.y * frame_h)))
     return nx, ny
