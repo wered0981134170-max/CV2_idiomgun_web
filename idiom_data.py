@@ -68,14 +68,10 @@ idioms = {
 
 }
 
-# =====================
 # 選項池
-# =====================
 options_pool = list("家國山水風雲花草人口手足心肝腦頭耳目鼻天地日月星空海河湖江田土木火金石")
 
-# =====================
 # 成語解析
-# =====================
 explanations = {
     "畫蛇添足": "「畫」一條「蛇」，又「添」上腳",
     "一鼓作氣": "打一次「鼓」，「作」出「氣勢」",
@@ -89,9 +85,7 @@ explanations = {
     "如魚得水": "「就如」一條「魚」「得到了」水",
 }
 
-# =====================
 # 錯字題
-# =====================
 def make_wrong_question(idiom: str) -> dict | None:
     pos_data = idioms.get(idiom, {})
     if not pos_data:
@@ -116,9 +110,7 @@ def make_wrong_question(idiom: str) -> dict | None:
         "explanation": explanations.get(idiom, ""),
     }
 
-# =====================
 # 填空題
-# =====================
 def make_fill_question(idiom: str) -> dict | None:
     pos_data = idioms.get(idiom, {})
 
@@ -160,9 +152,7 @@ def make_fill_question(idiom: str) -> dict | None:
         "explanation": explanations.get(idiom, ""),
     }
 
-# =====================
 # 題目生成
-# =====================
 def generate_questions(n=10, wrong_ratio=0.5, difficulty="mixed"):
     all_idioms = list(idioms.keys())
 
@@ -185,14 +175,12 @@ def generate_questions(n=10, wrong_ratio=0.5, difficulty="mixed"):
     random.shuffle(questions)
     return questions
 
-# =====================
 # 測試
-# =====================
-if __name__ == "__main__":
-    qs = generate_questions(10)
+# if __name__ == "__main__":
+#     qs = generate_questions(10)
 
-    for i, q in enumerate(qs, 1):
-        if q["type"] == "wrong":
-            print(f"[{i}] 找錯字：{q['display']} → 答案：{q['correct_char']}")
-        else:
-            print(f"[{i}] 填空：{q['template']} → {q['options']} 答案：{q['answer']}")
+#     for i, q in enumerate(qs, 1):
+#         if q["type"] == "wrong":
+#             print(f"[{i}] 找錯字：{q['display']} → 答案：{q['correct_char']}")
+#         else:
+#             print(f"[{i}] 填空：{q['template']} → {q['options']} 答案：{q['answer']}")

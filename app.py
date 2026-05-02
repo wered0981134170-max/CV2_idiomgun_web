@@ -14,30 +14,30 @@ from db import init_db, save_score, get_top
 # 啟動時建立資料表
 init_db()
 
-# ── 選擇性引入 cv2 / mediapipe（Render 無攝影機可跳過） ───────
+# 引入cv2/mediapipe
 try:
     import cv2
     import mediapipe as mp
     import numpy as np
     from mediapipe.tasks import python as mp_python
     from mediapipe.tasks.python import vision
+
     CV2_OK = True
 except ImportError:
     CV2_OK = False
 
 app = Flask(__name__)
 
-# ── 設定 ──────────────────────────────────────────────────────
-MODEL_PATH   = os.environ.get("MODEL_PATH", "hand_landmarker.task")
-DIFFICULTY   = "mixed"
-WRONG_RATIO  = 0.5
-TOTAL_Q      = 10
-Q_TIME_LIMIT = 15.0
-HOVER_TIME   = 1.5
-SMOOTH       = 0.65
-LOST_TIMEOUT = 0.8
+# 設定
+MODEL_PATH   = os.environ.get("MODEL_PATH", "hand_landmarker.task") #讀取、設定模型檔案
+WRONG_RATIO  = 0.5      #設定「錯誤選項」出現的比例
+TOTAL_Q      = 10       #設定總題數
+Q_TIME_LIMIT = 15.0     #每題作答時間限制
+HOVER_TIME   = 1.5      #指標懸停時間
+SMOOTH       = 0.65     #平滑參數(新位置 = 舊位置 \0.65 + 本次偵測 \0.35)
+LOST_TIMEOUT = 0.8      #失去追蹤的時間限制(超過0.8秒會觸發「手勢遺失」的事件)
 
-# ── 全局遊戲狀態 ──────────────────────────────────────────────
+# 全局遊戲狀態 
 game_lock = threading.Lock()
 game_state = {
     "state": "start",
