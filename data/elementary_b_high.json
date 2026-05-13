@@ -1,0 +1,117 @@
+[
+  {
+    "id": 1,
+    "grade": "elementary_high",
+    "idiom": "雪上加霜",
+    "meaning": "比喻兩者相爭，俱受損傷",
+    "questions": {
+      "typo": {
+        "question": "雪上加__",
+        "answer": "霜",
+        "options": ["霜", "雪", "冰", "水"]
+      },
+      "application": {
+        "question": "老王不小心扭到腳，現在又被玻璃割破了手，真是__。",
+        "answer": "雪上加霜",
+        "options": [
+          "雪上加霜",
+          "魚目混珠",
+          "投桃報李",
+          "惱羞成怒"
+        ]
+      }
+    }
+  },
+  {
+    "id": 2,
+    "grade": "elementary_high",
+    "idiom": "魚目混珠",
+    "meaning": "比喻以假亂真",
+    "questions": {
+      "typo": {
+        "question": "魚目__珠",
+        "answer": "混",
+        "options": ["混", "渾", "昏", "損"]
+      },
+      "application": {
+        "question": "不肖商人想拿仿冒品來__，欺騙不知情的顧客。",
+        "answer": "魚目混珠",
+        "options": [
+          "魚目混珠",
+          "按部就班",
+          "杯弓蛇影",
+          "守株待兔"
+        ]
+      }
+    }
+  },
+  {
+    "id": 3,
+    "grade": "elementary_high",
+    "idiom": "投桃報李",
+    "meaning": "比喻朋友間友好往來或相互贈答",
+    "questions": {
+      "typo": {
+        "question": "投桃__李",
+        "answer": "報",
+        "options": ["報", "抱", "爆", "刨"]
+      },
+      "application": {
+        "question": "我送她禮物只是__，請你不要另作聯想。",
+        "answer": "投桃報李",
+        "options": [
+          "兩敗俱傷",
+          "借花獻佛",
+          "瓜田李下",
+          "按部就班"
+        ]
+      }
+    }
+  },
+  {
+    "id": 4,
+    "grade": "elementary_high",
+    "idiom": "惱羞成怒",
+    "meaning": "因羞愧到極點而惱恨發怒",
+    "questions": {
+      "typo": {
+        "question": "__羞成怒",
+        "answer": "惱",
+        "options": ["惱", "腦", "繞", "瑙"]
+      },
+      "application": {
+        "question": "面對大家的不斷指責，他__，發了脾氣。",
+        "answer": "惱羞成怒",
+        "options": [
+          "惱羞成怒",
+          "心平氣和",
+          "百步穿楊",
+          "巾幗英雄"
+        ]
+      }
+    }
+  },
+  {
+    "id": 5,
+    "grade": "elementary_high",
+    "idiom": "緣木求魚",
+    "meaning": "比喻用錯方法，徒勞無功",
+    "questions": {
+      "typo": {
+        "question": "__木求魚",
+        "answer": "緣",
+        "options": ["緣", "源", "原", "綠"] 
+      },
+      "application": {
+        "question": "不多讀書寫作，要想成為作家，無異於__。",
+        "answer": "緣木求魚",
+        "options": [
+          "樂極生悲",
+          "如願以償",
+          "緣木求魚",
+          "按部就班"
+        ]
+      }
+    }
+  }
+]

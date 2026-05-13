@@ -1,0 +1,71 @@
+[
+  {
+    "id": 1,
+    "grade": "elementary_low",
+    "idiom": "兩敗俱傷",
+    "meaning": "比喻兩者相爭，俱受損傷",
+    "questions": {
+      "typo": {
+        "question": "兩敗__傷",
+        "answer": "俱",
+        "options": ["俱", "具", "且", "巨"]
+      },
+      "application": {
+        "question": "這麼多年來，兩兄弟鬥來鬥去，結果當然是__，徒惹他人笑話。",
+        "answer": "兩敗俱傷",
+        "options": [
+          "兩敗俱傷",
+          "按部就班",
+          "亡羊補牢",
+          "守株待兔"
+        ]
+      }
+    }
+  },
+  {
+    "id": 2,
+    "grade": "elementary_low",
+    "idiom": "按部就班",
+    "meaning": "比喻做事依照一定的層次、步驟進行",
+    "questions": {
+      "typo": {
+        "question": "按__就班",
+        "answer": "部",
+        "options": ["部", "步", "倍", "補"]
+      },
+      "application": {
+        "question": "這部機器只要照著指示，__操作就可以順利完成工作。",
+        "answer": "按部就班",
+        "options": [
+          "兩敗俱傷",
+          "按部就班",
+          "杯弓蛇影",
+          "守株待兔"
+        ]
+      }
+    }
+  },
+  {
+    "id": 3,
+    "grade": "elementary_low",
+    "idiom": "九牛一毛",
+    "meaning": "比喻極大數量中的一小部分",
+    "questions": {
+      "typo": {
+        "question": "九__一毛",
+        "answer": "牛",
+        "options": ["牛", "羊", "半", "龍"] 
+      },
+      "application": {
+        "question": "這點錢對他來說有如__，他不會在乎的。",
+        "answer": "九牛一毛",
+        "options": [
+          "兩敗俱傷",
+          "杯弓蛇影",
+          "九牛一毛",
+          "按部就班"
+        ]
+      }
+    }
+  }
+]
