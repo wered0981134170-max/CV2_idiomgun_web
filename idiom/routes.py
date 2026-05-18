@@ -6,8 +6,8 @@ from flask import Blueprint, render_template, Response, jsonify, request
 import time
 
 from game_state import game_lock, game_state
-from idiom_data import generate_questions
-from idaiom.db import save_score, get_top
+from question_type import get_questions_by_grade
+from db import save_score, get_top
 from camera import generate_video_stream, CV2_OK
 
 main_bp = Blueprint('main', __name__)
@@ -47,7 +47,7 @@ def start_game():
     wrong_r = float(data.get("wrong_ratio", 0.5))
     total = int(data.get("total_q", 10))
 
-    questions = generate_questions(n=total, difficulty=diff, wrong_ratio=wrong_r)
+    questions = get_questions_by_grade(grade=diff, n=total, typo_ratio=wrong_r)
 
     with game_lock:
         gs = game_state
@@ -100,12 +100,8 @@ def submit_answer():
             return jsonify({"error": "no question"})
 
         q = qs[idx]
-        if q["type"] == "wrong":
-            correct = chosen == q["wrong_char"]
-            correct_str = q["wrong_char"]
-        else:
-            correct = chosen == q["answer"]
-            correct_str = q["answer"]
+        correct = chosen == q["answer"]
+        correct_str = q["answer"]
 
         result = "correct" if correct else "wrong"
         if correct:
@@ -132,7 +128,7 @@ def submit_timeout():
             return jsonify({"error": "no question"})
 
         q = qs[idx]
-        correct_str = q.get("wrong_char") or q.get("answer", "")
+        correct_str = q.get("answer", "")
         gs["ans_result"] = "timeout"
         gs["state"] = "result"
 
