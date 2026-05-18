@@ -5,8 +5,8 @@ app.py  ── Flask 主程式入口
 import os
 from flask import Flask
 
-from db import init_db
-from camera import CV2_OK, MEDIAPIPE_OK
+from db import init_db                      # 初始化資料庫
+from camera import CV2_OK, MEDIAPIPE_OK     # 檢查 OpenCV 和 MediaPipe 是否可用
 
 app = Flask(__name__)
 

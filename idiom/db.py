@@ -1,4 +1,6 @@
-# db.py  ── SQLite 積分榜資料層
+"""
+db.py  ── SQLite 積分榜資料層
+"""
 
 import sqlite3
 import os

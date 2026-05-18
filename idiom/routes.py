@@ -7,7 +7,7 @@ import time
 
 from game_state import game_lock, game_state
 from question_type import get_questions_by_grade
-from db import save_score, get_top
+from idiom.db import save_score, get_top
 from camera import generate_video_stream, CV2_OK
 
 main_bp = Blueprint('main', __name__)
