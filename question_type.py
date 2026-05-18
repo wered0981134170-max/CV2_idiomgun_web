@@ -11,7 +11,7 @@ DATA_DIR = pl.Path("data")
 
 FILES = {
     "elementary_low": "elementary_a_low.json",
-    "elementary_high": "elementary_a_high.json",
+    "elementary_high": "elementary_b_high.json",
     "junior": "junior.json"
 }
 
