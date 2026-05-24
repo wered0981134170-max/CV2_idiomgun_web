@@ -8,7 +8,10 @@ from flask import Flask
 from db import init_db                      # 初始化資料庫
 from camera import CV2_OK, MEDIAPIPE_OK     # 檢查 OpenCV 和 MediaPipe 是否可用
 
-app = Flask(__name__)
+# 設定模板和靜態文件的路徑
+template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates'))
+static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static'))
+app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 
 # 註冊路由
 from routes import main_bp

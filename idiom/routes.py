@@ -7,10 +7,17 @@ import time
 
 from game_state import game_lock, game_state
 from question_type import get_questions_by_grade
-from idiom.db import save_score, get_top
+from db import save_score, get_top
 from camera import generate_video_stream, CV2_OK
 
 main_bp = Blueprint('main', __name__)
+
+# 難度級別映射
+DIFFICULTY_MAP = {
+    "easy": "elementary_low",
+    "medium": "elementary_high",
+    "hard": "junior"
+}
 
 # ── 網頁路由 ─────────────────────────────────────
 @main_bp.route("/")
@@ -44,10 +51,12 @@ def get_state():
 def start_game():
     data = request.json or {}
     diff = data.get("difficulty", "easy")
+    # 將前端難度值映射到後端年級值
+    grade = DIFFICULTY_MAP.get(diff, "elementary_low")
     wrong_r = float(data.get("wrong_ratio", 0.5))
     total = int(data.get("total_q", 10))
 
-    questions = get_questions_by_grade(grade=diff, n=total, typo_ratio=wrong_r)
+    questions = get_questions_by_grade(grade=grade, n=total, typo_ratio=wrong_r)
 
     with game_lock:
         gs = game_state
