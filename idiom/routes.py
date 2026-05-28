@@ -9,6 +9,7 @@ from game_state import game_lock, game_state
 from question_type import get_questions_by_grade
 from db import save_score, get_top
 from camera import generate_video_stream, CV2_OK
+from config import Config
 
 main_bp = Blueprint('main', __name__)
 
@@ -56,6 +57,7 @@ def start_game():
     wrong_r = float(data.get("wrong_ratio", 0.5))
     total = int(data.get("total_q", 10))
 
+    total = Config.GRADE_MAX_Q.get(grade, Config.TOTAL_Q)
     questions = get_questions_by_grade(grade=grade, n=total, typo_ratio=wrong_r)
 
     with game_lock:
@@ -66,8 +68,9 @@ def start_game():
         gs["questions"] = questions
         gs["q_start_time"] = time.time()
         gs["ans_result"] = None
+        gs["total_q"]      = len(questions)
 
-    return jsonify({"ok": True, "total": len(questions)})
+    return jsonify({"ok": True, "total": len(questions)}) 
 
 
 @main_bp.route("/question")
@@ -76,6 +79,7 @@ def get_question():
         gs = game_state
         idx = gs["q_index"]
         qs = gs["questions"]
+        total_q = gs.get("total_q", Config.TOTAL_Q)   
 
         if idx >= len(qs):
             return jsonify({"done": True, "score": gs["score"]})
@@ -87,7 +91,7 @@ def get_question():
         return jsonify({
             "done": False,
             "index": idx,
-            "total": len(qs),
+            "total": total_q,
             "score": gs["score"],
             "remain": round(remain, 2),
             "q_time": 15,

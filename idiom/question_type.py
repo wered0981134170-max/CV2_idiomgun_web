@@ -37,63 +37,76 @@ def load_all_questions() -> Dict[str, List[Dict]]:
 questions_data = load_all_questions()
 
 
-def get_questions_by_grade(grade: str = "elementary_low", n: int = 10, 
+def get_questions_by_grade(grade: str = "elementary_low", n: int = 10,
                           typo_ratio: float = 0.5) -> List[Dict]:
     """
-    從指定年級的 JSON 檔案中隨機抽取題目
+    從指定年級的 JSON 檔案中抽取題目。
+
+    出題順序：前半段全是 typo（錯字）題，後半段全是 application（應用）題。
+    每道成語各出一題 typo + 一題 application，共需 n/2 個成語（n 應為偶數）。
+    若 n 為奇數，typo 多一題。
     """
     if grade not in questions_data:
         raise ValueError(f"未知的年級: {grade}")
-    
+
     idioms_list = questions_data[grade]
-    if n > len(idioms_list):
-        print(f"警告：要求 {n} 題，但僅有 {len(idioms_list)} 個成語，將全部取出")
-        n = len(idioms_list)
 
-    selected_idioms = random.sample(idioms_list, n)
+    # 需要幾個成語：typo 和 application 各 ceil/floor(n/2) 題
+    n_typo = (n + 1) // 2          # 前半段：ceil(n/2)
+    n_app  = n // 2                # 後半段：floor(n/2)
+    n_idioms = max(n_typo, n_app)  # 每個成語各出兩種，所以只需 n_idioms 個
 
-    questions = []
+    if n_idioms > len(idioms_list):
+        print(f"警告：要求 {n_idioms} 個成語，但僅有 {len(idioms_list)} 個，將全部取出")
+        n_idioms = len(idioms_list)
+        n_typo   = n_idioms
+        n_app    = n_idioms
+
+    selected_idioms = random.sample(idioms_list, n_idioms)
+
+    typo_questions = []
+    app_questions  = []
 
     for idiom_data in selected_idioms:
-        idiom = idiom_data["idiom"]
+        idiom   = idiom_data["idiom"]
         q_types = idiom_data.get("questions", {})
+        common  = {
+            "idiom":       idiom,
+            "meaning":     idiom_data.get("meaning", ""),
+            "explanation": idiom_data.get("explanation", ""),
+            "grade":       idiom_data.get("grade"),
+        }
 
-        # 決定出題型態
-        if random.random() < typo_ratio and "typo" in q_types:
+        # ── typo 題 ──
+        if "typo" in q_types:
             q = q_types["typo"]
-            question_dict = {
-                "type": "wrong",
-                "idiom": idiom,
-                "display": q["question"],           # 如 "兩敗__傷"
-                "answer": q["answer"],              # 正確字
-                "options": q.get("options"),        # 若有提供選項
-                "hint": "找出錯字並秒準 1.5 秒",
-                "meaning": idiom_data.get("meaning", ""),
-                "explanation": idiom_data.get("explanation", ""),
-                "grade": idiom_data.get("grade")
-            }
-        elif "application" in q_types:
-            q = q_types["application"]
-            question_dict = {
-                "type": "application",
-                "idiom": idiom,
-                "display": q["question"],           # 上下文填空題
-                "answer": q["answer"],              # 完整成語
+            typo_questions.append({
+                **common,
+                "type":    "wrong",
+                "display": q["question"],       # 如 "兩敗__傷"
+                "answer":  q["answer"],         # 正確字，如 "俱"
                 "options": q.get("options", []),
-                "hint": "選擇正確的成語 1.5 秒",
-                "meaning": idiom_data.get("meaning", ""),
-                "explanation": idiom_data.get("explanation", ""),
-                "grade": idiom_data.get("grade")
-            }
-        else:
-            # 備用：如果都沒有就跳過
-            continue
+                "hint":    "找出正確的字填入空格",
+            })
 
-        questions.append(question_dict)
+        # ── application 題 ──
+        if "application" in q_types:
+            q = q_types["application"]
+            app_questions.append({
+                **common,
+                "type":    "application",
+                "display": q["question"],       # 上下文填空句
+                "answer":  q["answer"],         # 完整成語
+                "options": q.get("options", []),
+                "hint":    "選擇正確的成語填入空格",
+            })
 
-    random.shuffle(questions)
-    return questions
+    # 各自洗牌（同類題內部隨機），但保持「typo 在前、application 在後」的順序
+    random.shuffle(typo_questions)
+    random.shuffle(app_questions)
 
+    # 截到需要的數量，然後拼接
+    return typo_questions[:n_typo] + app_questions[:n_app]
 
 # ==================== 測試 ====================
 if __name__ == "__main__":

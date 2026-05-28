@@ -1,4 +1,4 @@
-# gesture.py  ── 手勢判斷模組（食指版）
+# gesture.py  ── 手勢判斷模組
 
 def is_index_up(landmarks) -> bool:
     """

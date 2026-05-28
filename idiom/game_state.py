@@ -25,4 +25,5 @@ game_state = {
     "last_valid_y": 360,
     "frame_w": 1280,
     "frame_h": 720,
+    "total_q": 10, 
 }
