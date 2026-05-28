@@ -6,12 +6,12 @@
     "meaning": "比喻待人勢利，態度轉變迅速。貶義。",
     "questions": {
       "typo": {
-        "question": "前__後恭",
+        "question": "前_後恭",
         "answer": "倨",
         "options": ["倨", "據", "劇", "侷"]
       },
       "application": {
-        "question": "知道我當了主任，他__的態度，令人憎惡。",
+        "question": "知道我當了主任，他_的態度，令人憎惡。",
         "answer": "前倨後恭",
         "options": [
           "前倨後恭",
@@ -29,12 +29,12 @@
     "meaning": "雖有耳聞，卻好像沒有聽到一樣不加理會。",
     "questions": {
       "typo": {
-        "question": "__若罔聞",
+        "question": "_若罔聞",
         "answer": "置",
         "options": ["置", "制", "質", "製"]
       },
       "application": {
-        "question": "當主管的人假如對部屬的意見都__，怎能集思廣益把公司辦好呢？",
+        "question": "當主管的人假如對部屬的意見都_，怎能集思廣益把公司辦好呢？",
         "answer": "置若罔聞",
         "options": [
           "置若罔聞",
@@ -52,12 +52,12 @@
     "meaning": "比喻見識淺陋狹窄",
     "questions": {
       "typo": {
-        "question": "管窺__測",
+        "question": "管窺_測",
         "answer": "蠡",
         "options": ["蠡", "螽", "釐", "理"]
       },
       "application": {
-        "question": "一個人若只在乎身邊的環境，難免會__地看事情，最後讓自己與時代脫節。",
+        "question": "一個人若只在乎身邊的環境，難免會_地看事情，最後讓自己與時代脫節。",
         "answer": "管窺蠡測",
         "options": [
           "管窺蠡測",
@@ -75,12 +75,12 @@
     "meaning": "比喻人同處於困境，而互相以微力救助",
     "questions": {
       "typo": {
-        "question": "相濡以__ ",
+        "question": "相濡以_ ",
         "answer": "沫",
         "options": ["沫", "漠", "末", "默"]
       },
       "application": {
-        "question": "這對好朋友在陷於絕境時，彼此__，互相照應。",
+        "question": "這對好朋友在陷於絕境時，彼此_，互相照應。",
         "answer": "相濡以沫 ",
         "options": [
           "相濡以沫 ",
@@ -98,12 +98,12 @@
     "meaning": "比喻事成之後，有功之人卻遭到殺戮或疏遠的命運",
     "questions": {
       "typo": {
-        "question": "鳥__弓藏",
+        "question": "鳥_弓藏",
         "answer": "盡",
         "options": ["盡", "進", "近", "竟"] 
       },
       "application": {
-        "question": "張良就是懂得適時急流勇退，才能避開如韓信__的下場。",
+        "question": "張良就是懂得適時急流勇退，才能避開如韓信_的下場。",
         "answer": "鳥盡弓藏",
         "options": [
           "樂極生悲",

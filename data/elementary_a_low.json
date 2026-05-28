@@ -6,12 +6,12 @@
     "meaning": "比喻兩者相爭，俱受損傷",
     "questions": {
       "typo": {
-        "question": "兩敗__傷",
+        "question": "兩敗_傷",
         "answer": "俱",
         "options": ["俱", "具", "且", "巨"]
       },
       "application": {
-        "question": "這麼多年來，兩兄弟鬥來鬥去，結果當然是__，徒惹他人笑話。",
+        "question": "這麼多年來，兩兄弟鬥來鬥去，結果當然是_，徒惹他人笑話。",
         "answer": "兩敗俱傷",
         "options": [
           "兩敗俱傷",
@@ -29,12 +29,12 @@
     "meaning": "比喻做事依照一定的層次、步驟進行",
     "questions": {
       "typo": {
-        "question": "按__就班",
+        "question": "按_就班",
         "answer": "部",
         "options": ["部", "步", "倍", "補"]
       },
       "application": {
-        "question": "這部機器只要照著指示，__操作就可以順利完成工作。",
+        "question": "這部機器只要照著指示，_操作就可以順利完成工作。",
         "answer": "按部就班",
         "options": [
           "兩敗俱傷",
@@ -52,17 +52,63 @@
     "meaning": "比喻極大數量中的一小部分",
     "questions": {
       "typo": {
-        "question": "九__一毛",
+        "question": "九_一毛",
         "answer": "牛",
         "options": ["牛", "羊", "半", "龍"] 
       },
       "application": {
-        "question": "這點錢對他來說有如__，他不會在乎的。",
+        "question": "這點錢對他來說有如_，他不會在乎的。",
         "answer": "九牛一毛",
         "options": [
           "兩敗俱傷",
           "杯弓蛇影",
           "九牛一毛",
+          "按部就班"
+        ]
+      }
+    }
+  },
+  {
+    "id": 4,
+    "grade": "elementary_high",
+    "idiom": "惱羞成怒",
+    "meaning": "因羞愧到極點而惱恨發怒",
+    "questions": {
+      "typo": {
+        "question": "_羞成怒",
+        "answer": "惱",
+        "options": ["惱", "腦", "繞", "瑙"]
+      },
+      "application": {
+        "question": "面對大家的不斷指責，他_，發了脾氣。",
+        "answer": "惱羞成怒",
+        "options": [
+          "惱羞成怒",
+          "心平氣和",
+          "百步穿楊",
+          "巾幗英雄"
+        ]
+      }
+    }
+  },
+  {
+    "id": 5,
+    "grade": "elementary_high",
+    "idiom": "緣木求魚",
+    "meaning": "比喻用錯方法，徒勞無功",
+    "questions": {
+      "typo": {
+        "question": "_木求魚",
+        "answer": "緣",
+        "options": ["緣", "源", "原", "綠"] 
+      },
+      "application": {
+        "question": "不多讀書寫作，要想成為作家，無異於_。",
+        "answer": "緣木求魚",
+        "options": [
+          "樂極生悲",
+          "如願以償",
+          "緣木求魚",
           "按部就班"
         ]
       }
