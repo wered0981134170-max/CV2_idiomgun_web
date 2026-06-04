@@ -96,7 +96,7 @@ def get_question():
             "remain": round(remain, 2),
             "q_time": 15,
             **{k: q.get(k) for k in ["type", "idiom", "display", "template", "options", 
-                                    "hint", "difficulty", "explanation"]}
+                                    "hint", "difficulty", "explanation", "correct_char"]}
         })
 
 
@@ -114,7 +114,8 @@ def submit_answer():
 
         q = qs[idx]
         correct = chosen == q["answer"]
-        correct_str = q["answer"]
+        # typo 題用 correct_char（正確字）顯示，其他題用 answer
+        correct_str = q.get("correct_char") or q["answer"]
 
         result = "correct" if correct else "wrong"
         if correct:

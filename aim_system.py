@@ -1,5 +1,5 @@
 """
-aim_system.py  ── 秒準（Hover-to-Select）判定模組
+aim_system.py  ── 秒準判定模組
 """
 
 import time
