@@ -8,7 +8,7 @@
       "typo": {
         "question": "前_後恭",
         "answer": "倨",
-        "options": ["倨", "據", "劇", "侷"]
+        "options": ["據", "劇", "侷"]
       },
       "application": {
         "question": "知道我當了主任，他_的態度，令人憎惡。",
@@ -31,7 +31,7 @@
       "typo": {
         "question": "_若罔聞",
         "answer": "置",
-        "options": ["置", "制", "質", "製"]
+        "options": ["制", "質", "製"]
       },
       "application": {
         "question": "當主管的人假如對部屬的意見都_，怎能集思廣益把公司辦好呢？",
@@ -54,7 +54,7 @@
       "typo": {
         "question": "管窺_測",
         "answer": "蠡",
-        "options": ["蠡", "螽", "釐", "理"]
+        "options": ["螽", "釐", "理"]
       },
       "application": {
         "question": "一個人若只在乎身邊的環境，難免會_地看事情，最後讓自己與時代脫節。",
@@ -77,7 +77,7 @@
       "typo": {
         "question": "相濡以_ ",
         "answer": "沫",
-        "options": ["沫", "漠", "末", "默"]
+        "options": ["漠", "末", "默"]
       },
       "application": {
         "question": "這對好朋友在陷於絕境時，彼此_，互相照應。",
@@ -100,7 +100,7 @@
       "typo": {
         "question": "鳥_弓藏",
         "answer": "盡",
-        "options": ["盡", "進", "近", "竟"] 
+        "options": ["進", "近", "竟"] 
       },
       "application": {
         "question": "張良就是懂得適時急流勇退，才能避開如韓信_的下場。",

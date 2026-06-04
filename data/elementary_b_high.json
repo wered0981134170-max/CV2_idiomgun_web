@@ -8,7 +8,7 @@
       "typo": {
         "question": "雪上加_",
         "answer": "霜",
-        "options": ["霜", "雪", "冰", "水"]
+        "options": ["雪", "冰", "水"]
       },
       "application": {
         "question": "老王不小心扭到腳，現在又被玻璃割破了手，真是_。",
@@ -31,7 +31,7 @@
       "typo": {
         "question": "魚目_珠",
         "answer": "混",
-        "options": ["混", "渾", "昏", "損"]
+        "options": ["渾", "昏", "損"]
       },
       "application": {
         "question": "不肖商人想拿仿冒品來_，欺騙不知情的顧客。",
@@ -54,7 +54,7 @@
       "typo": {
         "question": "投桃_李",
         "answer": "報",
-        "options": ["報", "抱", "爆", "刨"]
+        "options": ["抱", "爆", "刨"]
       },
       "application": {
         "question": "我送她禮物只是_，請你不要另作聯想。",
@@ -77,7 +77,7 @@
       "typo": {
         "question": "_羞成怒",
         "answer": "惱",
-        "options": ["惱", "腦", "繞", "瑙"]
+        "options": ["腦", "繞", "瑙"]
       },
       "application": {
         "question": "面對大家的不斷指責，他_，發了脾氣。",
@@ -100,7 +100,7 @@
       "typo": {
         "question": "_木求魚",
         "answer": "緣",
-        "options": ["緣", "源", "原", "綠"] 
+        "options": ["源", "原", "綠"] 
       },
       "application": {
         "question": "不多讀書寫作，要想成為作家，無異於_。",
