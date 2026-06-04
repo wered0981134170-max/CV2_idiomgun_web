@@ -80,13 +80,25 @@ def get_questions_by_grade(grade: str = "elementary_low", n: int = 10,
         # ── typo 題 ──
         if "typo" in q_types:
             q = q_types["typo"]
+            correct_char = q["answer"]          # 正確字，如 "俱"
+            wrong_opts   = q.get("options", []) # 三個錯字，如 ["具","且","巨"]
+
+            # 隨機選一個錯字填入 _ 位置，變成「兩敗具傷」
+            inserted = random.choice(wrong_opts) if wrong_opts else correct_char
+            display  = q["question"].replace("_", inserted, 1)
+
+            # 四個選項 = 三個錯字 + 正確字，洗牌
+            four_opts = wrong_opts + [correct_char]
+            random.shuffle(four_opts)
+
             typo_questions.append({
                 **common,
-                "type":    "wrong",
-                "display": q["question"],       # 如 "兩敗__傷"
-                "answer":  q["answer"],         # 正確字，如 "俱"
-                "options": q.get("options", []),
-                "hint":    "找出正確的字填入空格",
+                "type":         "wrong",
+                "display":      display,        # 如 "兩敗具傷"（已填入錯字）
+                "answer":       inserted,       # 使用者要選出的就是這個被填入的錯字
+                "correct_char": correct_char,   # 正確字（用於結果卡顯示）
+                "options":      four_opts,      # 四個選項供使用者選
+                "hint":         "找出成語中的錯字",
             })
 
         # ── application 題 ──

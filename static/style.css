@@ -283,15 +283,20 @@ body::after {
 /* ── 四角選項 ────────────────────────────────── */
 .corner-box {
   position: fixed;
-  width: 150px; height: 100px;
+  width: 200px; height: 80px;
   background: rgba(10,22,38,0.90);
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
   display: flex; align-items: center; justify-content: center;
-  font-size: 2.4rem;
+  font-size: clamp(1.1rem, 1.8vw, 1.55rem);
   font-weight: 700;
   color: var(--text);
+  letter-spacing: .08em;
+  padding: 0 12px;
+  text-align: center;
+  line-height: 1.2;
   z-index: 15;
+  overflow: visible;
   transition: border-color .15s, box-shadow .15s, transform .1s;
 }
 
@@ -302,10 +307,10 @@ body::after {
   color: var(--neon-g);
 }
 
-.corner-box[data-corner="0"] { left: 80px;  top: 80px; }
-.corner-box[data-corner="1"] { right: 80px; top: 80px; }
-.corner-box[data-corner="2"] { left: 80px;  bottom: 160px; }
-.corner-box[data-corner="3"] { right: 80px; bottom: 160px; }
+.corner-box[data-corner="0"] { left: 60px;  top: 80px; }
+.corner-box[data-corner="1"] { right: 60px; top: 80px; }
+.corner-box[data-corner="2"] { left: 60px;  bottom: 120px; }
+.corner-box[data-corner="3"] { right: 60px; bottom: 120px; }
 
 /* ── 結果覆蓋層 ──────────────────────────────── */
 #screen-result {
@@ -565,11 +570,11 @@ body.shake {
 /* ── 響應式 ──────────────────────────────────── */
 @media (max-width: 768px) {
   .char-box { width: 80px; height: 80px; font-size: 2rem; }
-  .corner-box { width: 110px; height: 80px; font-size: 1.9rem; }
-  .corner-box[data-corner="0"] { left: 20px; top: 60px; }
-  .corner-box[data-corner="1"] { right: 20px; top: 60px; }
-  .corner-box[data-corner="2"] { left: 20px; bottom: 60px; }
-  .corner-box[data-corner="3"] { right: 20px; bottom: 60px; }
+  .corner-box { width: 140px; height: 70px; font-size: clamp(.9rem, 3.5vw, 1.1rem); padding: 0 8px; }
+  .corner-box[data-corner="0"] { left: 10px; top: 60px; }
+  .corner-box[data-corner="1"] { right: 10px; top: 60px; }
+  .corner-box[data-corner="2"] { left: 10px; bottom: 70px; }
+  .corner-box[data-corner="3"] { right: 10px; bottom: 70px; }
   .result-card { min-width: 92vw; max-width: 92vw; padding: 36px 28px; }
   .result-status { font-size: 2.4rem; }
   .result-detail { font-size: 1.3rem; }
