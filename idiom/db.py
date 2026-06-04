@@ -1,5 +1,5 @@
 """
-db.py  ── SQLite 積分榜資料層
+db.py  ── SQLite 排行榜資料層
 """
 
 import sqlite3
@@ -11,9 +11,8 @@ DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "leaderboard.
 def _conn():
     return sqlite3.connect(DB_PATH)
 
-
+#建立資料表
 def init_db():
-    """建立資料表（若不存在）"""
     with _conn() as c:
         c.execute("""
             CREATE TABLE IF NOT EXISTS scores (
@@ -32,9 +31,8 @@ def init_db():
             pass
         c.commit()
 
-
+#儲存一筆分數，回傳插入的資料
 def save_score(name: str, score: int, total: int = 100, duration: int = 0) -> dict:
-    """儲存一筆分數，回傳插入的資料"""
     name = name.strip()[:20] or "匿名"
     with _conn() as c:
         cur = c.execute(
@@ -44,15 +42,13 @@ def save_score(name: str, score: int, total: int = 100, duration: int = 0) -> di
         c.commit()
         return {"id": cur.lastrowid, "name": name, "score": score, "duration": duration}
 
-
+#秒數轉 mm:ss 字串
 def _fmt(sec: int) -> str:
-    """秒數轉 mm:ss 字串"""
     m, s = divmod(max(0, sec), 60)
     return f"{m:02d}:{s:02d}"
 
-
+#取得前 N 名（分數高→低，同分依時間早→晚)
 def get_top(limit: int = 10) -> list[dict]:
-    """取得前 N 名（分數高→低，同分依時間早→晚）"""
     with _conn() as c:
         rows = c.execute(
             """SELECT id, name, score, total, duration, created_at
@@ -66,3 +62,28 @@ def get_top(limit: int = 10) -> list[dict]:
          "total": r[3], "duration": r[4], "duration_fmt": _fmt(r[4]), "time": r[5]}
         for i, r in enumerate(rows)
     ]
+
+# # 重置排行榜
+# def reset_table():
+#     with _conn() as c:
+#         c.execute("DELETE FROM scores")
+
+#         # 重置 AUTOINCREMENT 計數器
+#         c.execute(
+#             "DELETE FROM sqlite_sequence WHERE name='scores'"
+#         )
+
+#         c.commit()
+
+
+# # 測試
+# if __name__ == "__main__":
+#     init_db()
+
+#     print("重置前：")
+#     print(get_top())
+
+#     reset_table()
+
+#     print("重置後：")
+#     print(get_top())
