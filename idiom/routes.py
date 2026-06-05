@@ -8,7 +8,6 @@ import time
 from game_state import game_lock, game_state
 from question_type import get_questions_by_grade
 from db import save_score, get_top
-from camera import generate_video_stream, CV2_OK
 from config import Config
 
 main_bp = Blueprint('main', __name__)
@@ -24,15 +23,6 @@ DIFFICULTY_MAP = {
 @main_bp.route("/")
 def index():
     return render_template("index.html", total_q=10, q_time=15)
-
-
-@main_bp.route("/video_feed")
-def video_feed():
-    if not CV2_OK:
-        return Response(status=204)
-    return Response(generate_video_stream(),
-                    mimetype="multipart/x-mixed-replace; boundary=frame")
-
 
 @main_bp.route("/state")
 def get_state():
