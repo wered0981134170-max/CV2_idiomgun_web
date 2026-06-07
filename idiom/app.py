@@ -13,7 +13,7 @@ static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'stat
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 
 # 註冊路由
-from routes import main_bp
+from idiom.routes import main_bp
 app.register_blueprint(main_bp)
 
 # 啟動時建立資料表
