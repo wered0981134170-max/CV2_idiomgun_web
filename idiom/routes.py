@@ -5,10 +5,10 @@ routes.py  ── 所有 Flask 路由
 from flask import Blueprint, render_template, Response, jsonify, request
 import time
 
-from idiom.game_state import game_lock, game_state
-from idiom.question_type import get_questions_by_grade
-from idiom.db import save_score, get_top
-from idiom.config import Config
+from .game_state import game_lock, game_state
+from .question_type import get_questions_by_grade
+from .db import save_score, get_top
+from .config import Config
 
 main_bp = Blueprint('main', __name__)
 
