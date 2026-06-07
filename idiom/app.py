@@ -5,7 +5,7 @@ app.py  ── Flask 主程式入口
 import os
 from flask import Flask
 
-from db import init_db                      # 初始化資料庫
+from db import init_db      # 初始化資料庫
 
 # 設定模板和靜態文件的路徑
 template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates'))

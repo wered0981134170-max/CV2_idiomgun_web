@@ -12,13 +12,6 @@ from config import Config
 
 main_bp = Blueprint('main', __name__)
 
-# 難度級別映射
-DIFFICULTY_MAP = {
-    "easy": "elementary_low",
-    "medium": "elementary_high",
-    "hard": "junior"
-}
-
 # ── 網頁路由 ─────────────────────────────────────
 @main_bp.route("/")
 def index():
@@ -41,13 +34,16 @@ def get_state():
 @main_bp.route("/start_game", methods=["POST"])
 def start_game():
     data = request.json or {}
-    diff = data.get("difficulty", "easy")
-    # 將前端難度值映射到後端年級值
-    grade = DIFFICULTY_MAP.get(diff, "elementary_low")
-    wrong_r = float(data.get("wrong_ratio", 0.5))
-    total = int(data.get("total_q", 10))
 
-    total = Config.GRADE_MAX_Q.get(grade, Config.TOTAL_Q)
+    # 年級由後端 Config.ACTIVE_GRADE 控制
+    # 未來要支援前端選難度時，改成：
+    #   diff  = data.get("difficulty", "easy")
+    #   grade = DIFFICULTY_MAP.get(diff, Config.ACTIVE_GRADE)
+    grade   = Config.ACTIVE_GRADE
+    cfg     = Config.GRADE_CONFIG.get(grade, {})
+    total   = cfg.get("max_q", Config.TOTAL_Q)
+    wrong_r = Config.WRONG_RATIO
+
     questions = get_questions_by_grade(grade=grade, n=total, typo_ratio=wrong_r)
 
     with game_lock:
