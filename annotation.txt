@@ -10,3 +10,36 @@ annotation
 
 """annotation"""
 
+CV2_idiomgun_web/
+├── b_H/
+│   └── hand_landmarker.task    
+├── data/
+│   ├── elementary_a_low.json
+│   ├── elementary_b_high.json
+│   └── junior.json
+├── idiom/
+│   ├── app.py                  Flask 主程式入口
+│   ├── camera.py               MediaPipe + OpenCV 影像處理
+│   ├── config.py               全局設定
+│   ├── db.py                   排行榜資料層
+│   ├── game_state.py           遊戲狀態管理
+│   ├── leaderboard.db          排行榜資料庫
+│   ├── question_type.py        題目類型管理
+│   └── routes.py               所有 Flask 路由
+├── aim_system.py               秒準判定模組
+├── gesture.py                  手勢判斷模組
+└── templates/
+│   └── index.html
+├── static/
+│   ├── audio/
+│   │   ├── bgm.mp3
+│   │   ├── correct.mp3
+│   │   ├── tick.mp3
+│   │   └── wrong.mp3
+│   ├── audio.js
+│   ├── camera.js
+│   ├── effects.js
+│   └── style.css
+├── annotation.txt
+├── requirements.txt
+├── README.md
