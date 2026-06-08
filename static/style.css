@@ -309,8 +309,8 @@ body::after {
 
 .corner-box[data-corner="0"] { left: 60px;  top: 80px; }
 .corner-box[data-corner="1"] { right: 60px; top: 80px; }
-.corner-box[data-corner="2"] { left: 60px;  bottom: 120px; }
-.corner-box[data-corner="3"] { right: 60px; bottom: 120px; }
+.corner-box[data-corner="2"] { left: 60px;  bottom: 180px; }
+.corner-box[data-corner="3"] { right: 60px; bottom: 180px; }
 
 /* ── 結果覆蓋層 ──────────────────────────────── */
 #screen-result {
