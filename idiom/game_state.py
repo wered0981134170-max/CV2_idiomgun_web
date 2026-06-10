@@ -37,9 +37,3 @@ def delete_state(sid: str) -> None:
     with _sessions_lock:
         _sessions.pop(sid, None)
 
-
-# ── 向下相容：舊程式碼若直接 import game_lock / game_state 仍可運作 ──
-# （routes.py 改完後可移除）
-import threading
-game_lock  = threading.Lock()
-game_state = make_state()

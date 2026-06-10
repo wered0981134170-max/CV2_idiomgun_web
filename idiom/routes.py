@@ -36,8 +36,7 @@ def start_game():
     #   diff  = (request.json or {}).get("difficulty", "easy")
     #   grade = Config.DIFFICULTY_MAP.get(diff, Config.ACTIVE_GRADE)
     grade   = Config.ACTIVE_GRADE
-    cfg     = Config.GRADE_CONFIG.get(grade, {})
-    total   = cfg.get("max_q", Config.TOTAL_Q)
+    total   = Config.GRADE_MAX_Q.get(grade, Config.TOTAL_Q)
     wrong_r = Config.WRONG_RATIO
 
     questions = get_questions_by_grade(grade=grade, n=total, typo_ratio=wrong_r)
