@@ -54,7 +54,6 @@ def start_game():
         "ok":    True,
         "total": len(questions),
         "grade": grade,
-        "label": cfg.get("label", grade),
     })
 
 
