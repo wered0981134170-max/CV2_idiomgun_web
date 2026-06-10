@@ -6,7 +6,7 @@ import os
 import secrets
 from flask import Flask
 
-from db import init_db
+from idiom.db import init_db
 
 template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates'))
 static_dir   = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static'))
