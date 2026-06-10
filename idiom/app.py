@@ -17,7 +17,7 @@ app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 # 正式部署時請用環境變數傳入固定金鑰，避免重啟後 session 失效
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
-from routes import main_bp
+from idiom.routes import main_bp
 app.register_blueprint(main_bp)
 
 init_db()
