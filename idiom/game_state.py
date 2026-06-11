@@ -1,39 +1,29 @@
 """
-game_state.py  ── Session-based 遊戲狀態管理
-每個玩家透過 Flask session id 各自維護一份獨立的遊戲狀態
+game_state.py  ── 遊戲狀態管理
 """
 
 import time
 import threading
 
-# 全域字典：sid → game_state dict
-_sessions: dict = {}
-_sessions_lock = threading.Lock()
+game_lock = threading.Lock()
 
-
-def make_state() -> dict:
-    """建立一份全新的遊戲狀態"""
-    return {
-        "state":        "start",
-        "q_index":      0,
-        "score":        0,
-        "q_start_time": 0.0,
-        "ans_result":   None,
-        "questions":    [],
-        "total_q":      10,
-    }
-
-
-def get_state(sid: str) -> dict:
-    """取得（或建立）指定 session 的遊戲狀態"""
-    with _sessions_lock:
-        if sid not in _sessions:
-            _sessions[sid] = make_state()
-        return _sessions[sid]
-
-
-def delete_state(sid: str) -> None:
-    """刪除指定 session 的遊戲狀態（reset 時呼叫）"""
-    with _sessions_lock:
-        _sessions.pop(sid, None)
-
+game_state = {
+    "state": "start",
+    "q_index": 0,
+    "score": 0,
+    "q_start_time": 0.0,
+    "ans_result": None,
+    "questions": [],
+    "cursor_x": 640,
+    "cursor_y": 360,
+    "thumb_active": False,
+    "hover_target": None,
+    "hover_start": None,
+    "hover_progress": 0.0,
+    "last_seen": time.time(),
+    "last_valid_x": 640,
+    "last_valid_y": 360,
+    "frame_w": 1280,
+    "frame_h": 720,
+    "total_q": 10, 
+}
