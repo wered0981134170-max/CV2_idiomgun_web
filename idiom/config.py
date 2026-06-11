@@ -6,7 +6,7 @@ import os
 
 class Config:
     MODEL_PATH = os.environ.get("MODEL_PATH", "hand_landmarker.task")
-    ACTIVE_GRADE = "elementary_low"   # "elementary_low" 或 "elementary_high" 或 "junior"
+    ACTIVE_GRADE = "junior"   # "elementary_low" 或 "elementary_high" 或 "junior"
     WRONG_RATIO = 0.5       # 錯誤選項的比例
     TOTAL_Q = 10            # 總題數
     GRADE_MAX_Q = {
