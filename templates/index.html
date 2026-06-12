@@ -572,40 +572,44 @@ const Game = (() => {
   }
 
   // ══════════════════════════════════════════════════
-  // API 呼叫區
+  // 前端主導：題目在 beginGame() 時一次全部取回，
+  // 狀態（進度、分數）全部在前端維護。
   // ══════════════════════════════════════════════════
 
+  let allQuestions = [];   // 從後端一次取回的完整題目清單
+  let score        = 0;    // 前端自行維護的分數
+
   async function beginGame() {
-    const d = await (await fetch('/start_game', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({})
-    })).json();
-    if (!d.ok) return;
-    TOTAL_Q = d.total;            // 依年級更新實際題數
+    const res  = await fetch('/get_all_questions');
+    const data = await res.json();
+    allQuestions = data.questions;
+    TOTAL_Q = allQuestions.length;
+
+    score = 0;
     questionsAnswered = 0;
     actionLock = false;
-    gameStartTime = Date.now();   // 記錄開始時間
+    gameStartTime = Date.now();
     Audio.onStart();
     hide($('screen-start'));
-    hide($('lb-sidebar'));   // 遊戲開始，隱藏積分榜側欄
+    hide($('lb-sidebar'));
     show($('hud')); show($('timer-bar-wrap')); show($('hint-text'));
-    await loadNextQuestion();
+    loadNextQuestion();
   }
 
-  // 從後端取題目並渲染，進入 play 狀態
-  async function loadNextQuestion() {
-    const d = await (await fetch('/question')).json();
-    currentQ = d;
+  // 從本地陣列取題目並渲染，進入 play 狀態
+  function loadNextQuestion() {
+    const idx = questionsAnswered;
+    const q   = { ...allQuestions[idx], index: idx };
+    currentQ  = q;
     actionLock = false;
     Aim.reset();
     Audio.resetTick();
-    $('hud-q').textContent     = `${d.index + 1}/${TOTAL_Q}`;
-    $('hud-score').textContent = d.score;
-    $('hint-text').textContent = d.hint;
-    renderQ(d);
+    $('hud-q').textContent     = `${idx + 1}/${TOTAL_Q}`;
+    $('hud-score').textContent = score;
+    $('hint-text').textContent = q.hint;
+    renderQ(q);
     showGame();
 
-    // 設定計時器回呼，然後啟動
     Timer.onExpire(() => {
       if (actionLock) return;
       actionLock = true;
@@ -616,38 +620,54 @@ const Game = (() => {
     Timer.start(Q_TIME_LIMIT);
 
     state = 'play';
-    proceedLock = false;   // 解鎖，下一題可以正常跳題
+    proceedLock = false;
   }
 
-  // 答題處理（從 doPlay 觸發，此時 actionLock=true, state='result'）
-  async function handleAnswer(chosen, idx, boxes) {
+  // 答題處理（前端自行判斷對錯）
+  function handleAnswer(chosen, idx, boxes) {
     Timer.stop();
     const b  = boxes?.[idx];
     const fx = b ? (b.x1 + b.x2) / 2 : innerWidth / 2;
     const fy = b ? (b.y1 + b.y2) / 2 : innerHeight / 2;
-    const d  = await (await fetch('/answer', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chosen })
-    })).json();
-    if (d.result === 'correct') { Effects.onCorrect(fx, fy); Audio.onCorrect(); }
-    else                        { Effects.onWrong(fx, fy);   Audio.onWrong();   }
+
+    const correct = (chosen === currentQ.answer);
+    const result  = correct ? 'correct' : 'wrong';
+    if (correct) score += 10;
+
+    const d = {
+      result,
+      correct_str: currentQ.correct_char || currentQ.answer,
+      meaning:     currentQ.meaning     || '',
+      idiom:       currentQ.idiom,
+      score,
+      explanation: EXPLANATIONS[currentQ.idiom] || currentQ.explanation || '',
+    };
+
+    if (correct) { Effects.onCorrect(fx, fy); Audio.onCorrect(); }
+    else         { Effects.onWrong(fx, fy);   Audio.onWrong();   }
+
     questionsAnswered++;
-    if (currentQ) currentQ.score = d.score;
-    d.explanation = EXPLANATIONS[d.idiom] || currentQ?.explanation || '';
     hideGame();
     showResultCard(d, false);
   }
 
-  // 超時處理（由 Timer.onExpire 回呼觸發，此時 actionLock=true, state='result'）
-  async function handleTimeout() {
+  // 超時處理（前端自行標記）
+  function handleTimeout() {
     Timer.stop();
     Audio.stopTick();
-    const d = await (await fetch('/timeout', { method: 'POST' })).json();
     Effects.onTimeout(innerWidth / 2, innerHeight / 2);
     Audio.onTimeout();
+
+    const d = {
+      result:      'timeout',
+      correct_str: currentQ.correct_char || currentQ.answer,
+      meaning:     currentQ.meaning     || '',
+      idiom:       currentQ.idiom,
+      score,
+      explanation: EXPLANATIONS[currentQ.idiom] || currentQ.explanation || '',
+    };
+
     questionsAnswered++;
-    if (currentQ) currentQ.score = d.score;
-    d.explanation = EXPLANATIONS[d.idiom] || currentQ?.explanation || '';
     hideGame();
     showResultCard(d, true);
   }
@@ -719,8 +739,7 @@ const Game = (() => {
       return;
     }
 
-    await fetch('/next', { method: 'POST' });
-    await loadNextQuestion();
+    loadNextQuestion();
     // loadNextQuestion 結尾會解鎖 proceedLock
   }
 
@@ -826,9 +845,9 @@ const Game = (() => {
     cancelAnimationFrame(fh);
     if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
     Timer.stop();
-    await fetch('/reset', { method: 'POST' });
     state = 'start'; currentQ = null;
     questionsAnswered = 0; actionLock = false; proceedLock = false;
+    allQuestions = []; score = 0;
     gameStartTime = 0;
     startHover = null; resultHover = null;
     Aim.reset(); Audio.resetTick();
