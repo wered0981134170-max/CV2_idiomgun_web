@@ -48,10 +48,7 @@ const Audio = (() => {
       load('bgm',     '/static/audio/bgm.mp3'),
       load('correct', '/static/audio/correct.mp3'),
       load('wrong',   '/static/audio/wrong.mp3'),
-      load('timeout', '/static/audio/timeout.mp3'),
       load('tick',    '/static/audio/tick.mp3'),
-      load('start',   '/static/audio/start.mp3'),
-      load('finish',  '/static/audio/finish.mp3'),
     ]);
     console.log('[Audio] 載入完成，已載入：', Object.keys(buffers).join(', '));
   }
