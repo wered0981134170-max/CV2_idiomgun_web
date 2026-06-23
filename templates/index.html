@@ -516,8 +516,8 @@ const Game = (() => {
 
       // q.display = "兩敗_傷"，q.options = ["具","且","巨"]（錯字）
       // 隨機選一個錯字填入 _，組成完整成語（如「兩敗具傷」）
-      const wrongChar = q.options[Math.floor(Math.random() * q.options.length)];
-      const filled    = q.display.replace('_', wrongChar);
+      const filled    = q.display;   // 後端已填好，直接用
+      const wrongChar = q.answer;    // 正確答案就是要找的錯字
       const wrongIdx  = filled.indexOf(wrongChar);
 
       // 四個字全部渲染成方形 char-box，全部可點選

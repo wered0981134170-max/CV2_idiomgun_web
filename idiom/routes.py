@@ -79,10 +79,3 @@ def leaderboard_reset():
 #清除資料，在瀏覽器 Console 執行
 # fetch('/leaderboard/reset', {method:'POST'}).then(r=>r.json()).then(console.log)
 
-@main_bp.route("/get_all_questions")
-def get_all_questions():
-    grade   = Config.ACTIVE_GRADE
-    total   = Config.GRADE_MAX_Q.get(grade, Config.TOTAL_Q)
-    wrong_r = Config.WRONG_RATIO
-    questions = get_questions_by_grade(grade=grade, n=total, typo_ratio=wrong_r)
-    return jsonify({"questions": questions, "total": len(questions)})
