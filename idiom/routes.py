@@ -67,3 +67,12 @@ def leaderboard_post():
     duration = int(data.get("duration", 0))
     entry = save_score(name, score, total, duration)
     return jsonify({"ok": True, "entry": entry})
+
+@main_bp.route("/leaderboard/reset", methods=["POST"])
+def leaderboard_reset():
+    from .db import _conn
+    with _conn() as c:
+        c.execute("DELETE FROM scores")
+        c.execute("DELETE FROM sqlite_sequence WHERE name='scores'")
+        c.commit()
+    return jsonify({"ok": True})
