@@ -83,5 +83,6 @@ def leaderboard_reset():
 def get_all_questions():
     grade   = Config.ACTIVE_GRADE
     total   = Config.GRADE_MAX_Q.get(grade, Config.TOTAL_Q)
-    questions = get_questions_by_grade(grade=grade, n=total, typo_ratio=Config.WRONG_RATIO)
-    return jsonify({"questions": questions})
+    wrong_r = Config.WRONG_RATIO
+    questions = get_questions_by_grade(grade=grade, n=total, typo_ratio=wrong_r)
+    return jsonify({"questions": questions, "total": len(questions)})
