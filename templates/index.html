@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -170,19 +171,59 @@ await startCamera();
     <div class="game-subtitle">IDIOM SHOOTER · GESTURE CONTROL</div>
     <div class="start-hint">伸出食指 · 停留 1.5 秒 · 開始遊戲</div>
 
-    <!-- 玩家名稱輸入 -->
-    <div style="margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:6px">
-      <label for="player-name"
-             style="font-family:var(--font-mono);font-size:.72rem;color:var(--muted);letter-spacing:.15em">
-        輸入名稱（選填）
-      </label>
-      <input id="player-name" type="text" maxlength="10" placeholder="最多 10 字"
-             style="background:rgba(0,0,0,0.4);border:1px solid var(--border);
-                    border-radius:4px;padding:8px 14px;color:var(--text);
-                    font-family:var(--font-main);font-size:1rem;text-align:center;
-                    width:220px;outline:none;transition:border-color .2s"
-             onfocus="this.style.borderColor='var(--neon-g)'"
-             onblur="this.style.borderColor='var(--border)'">
+    <!-- 玩家名稱輸入 / 登入系統預留區塊 -->
+    <!--
+      ════════════════════════════════════════════════════════
+      ★ 登入系統預留說明：
+        目前顯示「訪客名稱輸入」。
+        未來實作登入後，此區塊替換為兩個子狀態：
+          (A) 未登入：顯示 [登入] / [註冊] 按鈕
+          (B) 已登入：顯示「Hi, {username}」+ [登出] 按鈕，
+                      隱藏 player-name 輸入框（改用帳號名）
+        JS 端：在 beginGame() 送分時帶入 user_id，
+               後端 /leaderboard POST 可辨識帳號。
+      ════════════════════════════════════════════════════════
+    -->
+    <div id="auth-area" style="margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:10px">
+
+      <!-- ── (A) 訪客模式（登入前顯示） ─────────────── -->
+      <div id="guest-area" style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <label for="player-name"
+               style="font-family:var(--font-mono);font-size:.72rem;color:var(--muted);letter-spacing:.15em">
+          輸入名稱（選填）
+        </label>
+        <input id="player-name" type="text" maxlength="10" placeholder="最多 10 字"
+               style="background:rgba(0,0,0,0.4);border:1px solid var(--border);
+                      border-radius:4px;padding:8px 14px;color:var(--text);
+                      font-family:var(--font-main);font-size:1rem;text-align:center;
+                      width:220px;outline:none;transition:border-color .2s"
+               onfocus="this.style.borderColor='var(--neon-g)'"
+               onblur="this.style.borderColor='var(--border)'">
+        <!-- 預留：登入/註冊按鈕（未來替換此註解） -->
+        <!-- <div style="display:flex;gap:8px;margin-top:4px">
+          <button id="btn-login"
+                  style="font-family:var(--font-mono);font-size:.72rem;padding:5px 14px;
+                         border-radius:3px;border:1px solid var(--neon-b);
+                         background:transparent;color:var(--neon-b);cursor:pointer">登入</button>
+          <button id="btn-register"
+                  style="font-family:var(--font-mono);font-size:.72rem;padding:5px 14px;
+                         border-radius:3px;border:1px solid var(--border);
+                         background:transparent;color:var(--muted);cursor:pointer">註冊</button>
+        </div> -->
+      </div>
+
+      <!-- ── (B) 已登入狀態（登入後顯示，預設隱藏） ──── -->
+      <!-- 實作登入後：移除 display:none，填入帳號資訊 -->
+      <div id="logged-in-area" style="display:none;flex-direction:column;align-items:center;gap:6px">
+        <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--neon-g)">
+          👤 Hi, <span id="logged-in-name">玩家</span>
+        </span>
+        <button id="btn-logout"
+                style="font-family:var(--font-mono);font-size:.68rem;padding:4px 12px;
+                       border-radius:3px;border:1px solid rgba(255,68,102,0.4);
+                       background:transparent;color:var(--neon-r);cursor:pointer">登出</button>
+      </div>
+
     </div>
 
     <div class="meta-row" style="margin-top:16px">
@@ -735,7 +776,7 @@ const Game = (() => {
     resultHover = null;
 
     if (questionsAnswered >= TOTAL_Q) {
-      showFinal(currentQ?.score ?? 0);
+      showFinal(score);  // ★ 修正：使用前端自維護的 score 變數（原本錯誤使用 currentQ?.score）
       return;
     }
 

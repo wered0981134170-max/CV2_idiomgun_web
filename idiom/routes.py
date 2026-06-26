@@ -55,7 +55,8 @@ def get_all_questions():
 # ── 排行榜 ─────────────────────────────────────
 @main_bp.route("/leaderboard", methods=["GET"])
 def leaderboard_get():
-    return jsonify(get_top(10))
+    # ★ 修改 1：只回傳前 5 名（原本是10）
+    return jsonify(get_top(5))
 
 
 @main_bp.route("/leaderboard", methods=["POST"])
@@ -65,6 +66,12 @@ def leaderboard_post():
     score    = int(data.get("score", 0))
     total    = int(data.get("total", 100))
     duration = int(data.get("duration", 0))
+
+    # ── 未來登入系統：可在此接收 user_id，綁定到已登入帳號 ──
+    # user_id = data.get("user_id")  # 預留：登入後由前端帶入
+    # if user_id:
+    #     name = get_username_by_id(user_id)  # 預留：從 users 資料表查名稱
+
     entry = save_score(name, score, total, duration)
     return jsonify({"ok": True, "entry": entry})
 
@@ -79,3 +86,35 @@ def leaderboard_reset():
 #清除資料，在瀏覽器 Console 執行
 # fetch('/leaderboard/reset', {method:'POST'}).then(r=>r.json()).then(console.log)
 
+
+# ══════════════════════════════════════════════════════════
+# ── 預留：登入系統路由 ─────────────────────────────────
+# 未來實作登入功能時，在此區塊新增路由。
+# 建議搭配 Flask-Login 或 JWT，並在 db.py 新增 users 資料表。
+#
+# @main_bp.route("/auth/register", methods=["POST"])
+# def register():
+#     data = request.json or {}
+#     username = data.get("username", "").strip()
+#     password = data.get("password", "")
+#     # TODO: 驗證、雜湊密碼、寫入 users 資料表
+#     return jsonify({"ok": True, "user_id": new_user_id})
+#
+# @main_bp.route("/auth/login", methods=["POST"])
+# def login():
+#     data = request.json or {}
+#     username = data.get("username", "").strip()
+#     password = data.get("password", "")
+#     # TODO: 驗證帳密、回傳 session token 或 JWT
+#     return jsonify({"ok": True, "token": token, "user_id": user_id, "name": username})
+#
+# @main_bp.route("/auth/logout", methods=["POST"])
+# def logout():
+#     # TODO: 清除 session / 廢止 token
+#     return jsonify({"ok": True})
+#
+# @main_bp.route("/auth/me", methods=["GET"])
+# def me():
+#     # TODO: 從 Authorization header 驗證 token，回傳使用者資訊
+#     return jsonify({"user_id": ..., "name": ..., "best_score": ...})
+# ══════════════════════════════════════════════════════════
