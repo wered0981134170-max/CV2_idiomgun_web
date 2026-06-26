@@ -199,22 +199,17 @@ await startCamera();
                       width:220px;outline:none;transition:border-color .2s"
                onfocus="this.style.borderColor='var(--neon-g)'"
                onblur="this.style.borderColor='var(--border)'">
-        <div style="display:flex;gap:8px;margin-top:4px">
-          <button id="btn-login"
-                  style="font-family:var(--font-mono);font-size:.72rem;padding:5px 14px;
-                         border-radius:3px;border:1px solid var(--neon-b);
-                         background:transparent;color:var(--neon-b);cursor:pointer;transition:all .2s">登入</button>
-          <button id="btn-register"
-                  style="font-family:var(--font-mono);font-size:.72rem;padding:5px 14px;
-                         border-radius:3px;border:1px solid var(--border);
-                         background:transparent;color:var(--muted);cursor:pointer;transition:all .2s">註冊</button>
-        </div>
+        <button id="btn-identify"
+                style="font-family:var(--font-mono);font-size:.72rem;padding:5px 18px;
+                       border-radius:3px;border:1px solid var(--neon-b);
+                       background:transparent;color:var(--neon-b);cursor:pointer;
+                       transition:all .2s;margin-top:4px">確認身分</button>
       </div>
 
-      <!-- ── (B) 已登入狀態（登入後顯示，預設隱藏） ──── -->
+      <!-- ── (B) 已確認身分（確認後顯示，預設隱藏） ──── -->
       <div id="logged-in-area" style="display:none;flex-direction:column;align-items:center;gap:6px">
         <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--neon-g)">
-          👤 Hi, <span id="logged-in-name">玩家</span>
+          👤 <span id="logged-in-name"></span>
         </span>
         <span id="logged-in-best"
               style="font-family:var(--font-mono);font-size:.68rem;color:var(--neon-y);letter-spacing:.05em"></span>
@@ -329,23 +324,23 @@ await startCamera();
   </div>
 </div>
 
-<!-- 登入 / 註冊 Modal -->
+<!-- 確認身分 Modal -->
 <div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:500;
      align-items:center;justify-content:center;
      background:rgba(7,11,18,0.88);backdrop-filter:blur(8px)">
   <div class="auth-card">
-    <div class="auth-tabs">
-      <button id="tab-login"    class="auth-tab auth-tab-active">登入</button>
-      <button id="tab-register" class="auth-tab">註冊</button>
+    <div style="font-family:var(--font-mono);font-size:.82rem;color:var(--neon-g);
+                letter-spacing:.2em;text-align:center;margin-bottom:24px">
+      確認身分
     </div>
-    <input id="auth-username" class="auth-input" type="text"
-           placeholder="帳號（中英文、數字、底線，2-20字）"
-           maxlength="20" autocomplete="username">
-    <input id="auth-password" class="auth-input" type="password"
-           placeholder="密碼（至少 6 字）"
-           maxlength="50" autocomplete="current-password">
+    <input id="auth-class" class="auth-input" type="text"
+           placeholder="班級（例：三年二班）" maxlength="20">
+    <input id="auth-seat"  class="auth-input" type="number"
+           placeholder="座號（1–99）" min="1" max="99">
+    <input id="auth-name"  class="auth-input" type="text"
+           placeholder="姓名" maxlength="10">
     <div id="auth-error" class="auth-error"></div>
-    <button id="auth-submit" class="auth-btn-submit">登入</button>
+    <button id="auth-submit" class="auth-btn-submit">確認</button>
     <button id="auth-close"  class="auth-btn-close">取消</button>
   </div>
 </div>
@@ -840,9 +835,9 @@ const Game = (() => {
     const timeEl = $('final-duration');
     if (timeEl) timeEl.textContent = `⏱ 遊戲時間：${durationFmt}`;
 
-    // 提交分數（登入時使用帳號名稱，否則取輸入框）
-    const playerName = Auth.isLoggedIn()
-      ? Auth.getUsername()
+    // 提交分數（已識別身分時名稱由後端從 session 取，前端送隨意即可）
+    const playerName = Auth.isIdentified()
+      ? Auth.getStudent().name
       : ($('player-name')?.value || '').trim() || '匿名';
     fetch('/leaderboard', {
       method: 'POST',
@@ -875,12 +870,15 @@ const Game = (() => {
       }
 
       listEl.innerHTML = rows.map((r, i) => {
-        const isMe = (i === myRank);
-        const dur  = r.duration_fmt || '--:--';
+        const isMe      = (i === myRank);
+        const dur       = r.duration_fmt || '--:--';
+        const fullName  = r.class_name
+          ? `${r.class_name} ${r.seat_no}號 ${r.name}`
+          : r.name;
         return `
         <div class="lb-row-final ${i < 3 ? 'lb-top' : ''} ${isMe ? 'lb-me' : ''}">
           <span class="lb-rank">${medals[i] || ('#' + r.rank)}</span>
-          <span class="lb-name">${r.name}${isMe ? ' ◀ 你' : ''}</span>
+          <span class="lb-name">${fullName}${isMe ? ' ◀ 你' : ''}</span>
           <span class="lb-score-final">${r.score}</span>
           <span style="font-family:var(--font-mono);font-size:.7rem;
                        color:var(--muted);white-space:nowrap">⏱${dur}</span>
@@ -902,13 +900,15 @@ const Game = (() => {
         return;
       }
       const medals = ['🥇', '🥈', '🥉'];
-      listEl.innerHTML = rows.map((r, i) => `
+      listEl.innerHTML = rows.map((r, i) => {
+        const shortName = r.seat_no ? `${r.seat_no}號 ${r.name}` : r.name;
+        return `
         <div class="lb-row-side ${i < 3 ? 'lb-top-side' : ''}">
           <span class="lb-rank-side">${medals[i] || r.rank}</span>
-          <span class="lb-name-side">${r.name}</span>
+          <span class="lb-name-side">${shortName}</span>
           <span class="lb-score-side">${r.score}</span>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     } catch (e) {
       listEl.innerHTML = '<div style="font-size:.65rem;color:var(--neon-r)">無法載入</div>';
     }

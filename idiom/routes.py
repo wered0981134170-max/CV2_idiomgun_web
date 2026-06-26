@@ -4,12 +4,11 @@ routes.py  ── 所有 Flask 路由（純前端主導架構）
 後端只做三件事：
   1. 提供首頁 HTML
   2. /get_all_questions  一次吐出所有題目給前端
-  3. /leaderboard        排行榜讀寫（登入時自動綁定帳號）
+  3. /leaderboard        排行榜讀寫（已識別學生自動帶入班級座號姓名）
 遊戲狀態（進度、分數、計時）全部由前端 JavaScript 管理。
 """
 
-from flask import Blueprint, render_template, jsonify, request
-from flask_login import current_user
+from flask import Blueprint, render_template, jsonify, request, session
 
 from .question_type import get_questions_by_grade
 from .db import save_score, get_top, reset_table
@@ -27,14 +26,6 @@ def index():
 # ── 題目 API（一次全給） ─────────────────────────
 @main_bp.route("/get_all_questions", methods=["GET"])
 def get_all_questions():
-    """
-    回傳一整局的題目清單。
-    前端拿到後自行洗牌、計時、判斷對錯，後端不再介入。
-
-    Query params（均可省略，使用 config 預設值）：
-      grade  : elementary_low | elementary_high | junior
-      n      : 題數（整數）
-    """
     grade = request.args.get("grade", Config.ACTIVE_GRADE)
     if grade not in ("elementary_low", "elementary_high", "junior"):
         grade = Config.ACTIVE_GRADE
@@ -63,15 +54,18 @@ def leaderboard_get():
 
 @main_bp.route("/leaderboard", methods=["POST"])
 def leaderboard_post():
-    data = request.json or {}
+    data    = request.json or {}
+    student = session.get("student")
 
-    # 已登入：使用帳號名稱並記錄 user_id，忽略前端送來的 name
-    if current_user.is_authenticated:
-        name = current_user.username
-        uid  = int(current_user.id)
+    # 已識別學生：從 session 取班級、座號、姓名
+    if student:
+        class_name = student["class_name"]
+        seat_no    = student["seat_no"]
+        name       = student["name"]
     else:
-        name = (data.get("name") or "").strip()[:20] or "匿名"
-        uid  = None
+        class_name = None
+        seat_no    = None
+        name       = (data.get("name") or "").strip()[:20] or "匿名"
 
     try:
         score    = max(0, min(int(data.get("score",    0)),  10000))
@@ -80,7 +74,7 @@ def leaderboard_post():
     except (TypeError, ValueError):
         return jsonify({"ok": False, "error": "invalid payload"}), 400
 
-    entry = save_score(name, score, total, duration, uid)
+    entry = save_score(name, score, total, duration, class_name, seat_no)
     return jsonify({"ok": True, "entry": entry})
 
 
