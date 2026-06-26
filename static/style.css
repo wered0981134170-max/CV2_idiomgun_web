@@ -83,20 +83,6 @@ body::after {
   overflow: hidden;
 }
 
-#camera-feed {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  opacity: 0.18;
-  filter: saturate(0) brightness(0.7);
-}
-
-/* ── 遊戲畫布覆蓋層 ──────────────────────────── */
-#game-canvas {
-  position: fixed; inset: 0;
-  z-index: 2;
-  pointer-events: none;
-}
-
 /* ── 面板通用 ────────────────────────────────── */
 .panel {
   position: relative;
@@ -480,28 +466,6 @@ body.shake {
   animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
 }
 
-/* ── CSS 粒子（備用，主要用 Canvas） ────────── */
-.particle {
-  position: fixed;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 999;
-  animation: explode 1.5s ease-out forwards;
-}
-
-@keyframes explode {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--x), var(--y)) scale(0.3);
-    opacity: 0;
-  }
-}
-
 /* ── 動畫 ────────────────────────────────────── */
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(24px); }
@@ -537,36 +501,6 @@ body.shake {
   100% { box-shadow: 0 0 0 0 rgba(255,68,102,0); }
 }
 
-/* ── 答對全畫面爆炸粒子 ──────────────────────── */
-.particle {
-  position: fixed;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 999;
-  animation: explode 1.5s ease-out forwards;
-}
-
-@keyframes explode {
-  0%   { transform: translate(0, 0) scale(1);   opacity: 1; }
-  100% { transform: translate(var(--x), var(--y)) scale(0.3); opacity: 0; }
-}
-
-/* ── 答錯畫面震動 ────────────────────────────── */
-@keyframes shake {
-  0%   { transform: translate(0px,   0px);  }
-  20%  { transform: translate(-10px,  5px); }
-  40%  { transform: translate( 10px, -5px); }
-  60%  { transform: translate( -5px, 10px); }
-  80%  { transform: translate(  5px,-10px); }
-  100% { transform: translate(0px,   0px);  }
-}
-
-.shake {
-  animation: shake 0.6s ease;
-}
-
 /* ── 響應式 ──────────────────────────────────── */
 @media (max-width: 768px) {
   .char-box { width: 80px; height: 80px; font-size: 2rem; }
@@ -580,6 +514,104 @@ body.shake {
   .result-detail { font-size: 1.3rem; }
   .final-card  { min-width: 90vw; padding: 32px 24px; }
 }
+
+/* ── 登入 / 註冊 Modal ───────────────────────── */
+.auth-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+  padding: 36px 44px;
+  width: 400px; max-width: 92vw;
+  position: relative;
+}
+
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.auth-tab {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  color: var(--muted);
+  background: none; border: none;
+  padding: 8px 0 12px;
+  cursor: pointer;
+  letter-spacing: .1em;
+  transition: color .2s, box-shadow .2s;
+}
+
+.auth-tab.auth-tab-active {
+  color: var(--neon-g);
+  box-shadow: 0 2px 0 var(--neon-g);
+}
+
+.auth-input {
+  display: block;
+  width: 100%;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-family: var(--font-main);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color .2s;
+  margin-bottom: 12px;
+}
+
+.auth-input:focus { border-color: var(--neon-g); }
+.auth-input::placeholder { color: var(--muted); font-size: .88rem; }
+
+.auth-error {
+  color: var(--neon-r);
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  min-height: 18px;
+  margin-bottom: 12px;
+  letter-spacing: .05em;
+}
+
+.auth-btn-submit {
+  display: block; width: 100%;
+  font-family: var(--font-main);
+  font-size: 1rem; font-weight: 700;
+  color: var(--bg);
+  background: var(--neon-g);
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: .1em;
+  transition: transform .1s, box-shadow .2s;
+  box-shadow: 0 0 16px rgba(0,229,160,.35);
+  margin-bottom: 10px;
+}
+
+.auth-btn-submit:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 28px rgba(0,229,160,.65);
+}
+
+.auth-btn-close {
+  display: block; width: 100%;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  color: var(--muted);
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: .1em;
+  transition: border-color .2s, color .2s;
+}
+
+.auth-btn-close:hover { border-color: var(--border); color: var(--text); }
 
 /* ── 積分榜按鈕（已移除，保留備用） ─────────── */
 

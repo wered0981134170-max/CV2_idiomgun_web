@@ -4,9 +4,11 @@ question_type.py  ── 題目類型管理
  
 import random
 import json
+import logging
 import pathlib as pl
 from typing import List, Dict, Any
-import os
+
+log = logging.getLogger(__name__)
 
 # 相對於此文件位置的父目錄中的 data 文件夾
 DATA_DIR = pl.Path(__file__).parent.parent / "data"
@@ -26,9 +28,9 @@ def load_all_questions() -> Dict[str, List[Dict]]:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 all_data[grade] = data
-                print(f"已載入 {grade}: {len(data)} 個成語")
+                log.info("已載入 %s: %d 個成語", grade, len(data))
         else:
-            print(f"警告：找不到檔案 {path}")
+            log.warning("找不到檔案 %s", path)
             all_data[grade] = []
     return all_data
 
@@ -37,8 +39,7 @@ def load_all_questions() -> Dict[str, List[Dict]]:
 questions_data = load_all_questions()
 
 
-def get_questions_by_grade(grade: str = "elementary_low", n: int = 10,
-                          typo_ratio: float = 0.5) -> List[Dict]:
+def get_questions_by_grade(grade: str = "elementary_low", n: int = 10) -> List[Dict]:
     """
     從指定年級的 JSON 檔案中抽取題目。
 
@@ -57,7 +58,7 @@ def get_questions_by_grade(grade: str = "elementary_low", n: int = 10,
     n_idioms = max(n_typo, n_app)  # 每個成語各出兩種，所以只需 n_idioms 個
 
     if n_idioms > len(idioms_list):
-        print(f"警告：要求 {n_idioms} 個成語，但僅有 {len(idioms_list)} 個，將全部取出")
+        log.warning("要求 %d 個成語，但僅有 %d 個，將全部取出", n_idioms, len(idioms_list))
         n_idioms = len(idioms_list)
         n_typo   = n_idioms
         n_app    = n_idioms

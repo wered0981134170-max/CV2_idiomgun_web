@@ -4,13 +4,15 @@ routes.py  ── 所有 Flask 路由（純前端主導架構）
 後端只做三件事：
   1. 提供首頁 HTML
   2. /get_all_questions  一次吐出所有題目給前端
-  3. /leaderboard        排行榜讀寫
+  3. /leaderboard        排行榜讀寫（登入時自動綁定帳號）
 遊戲狀態（進度、分數、計時）全部由前端 JavaScript 管理。
 """
 
 from flask import Blueprint, render_template, jsonify, request
+from flask_login import current_user
+
 from .question_type import get_questions_by_grade
-from .db import save_score, get_top
+from .db import save_score, get_top, reset_table
 from .config import Config
 
 main_bp = Blueprint('main', __name__)
@@ -34,16 +36,17 @@ def get_all_questions():
       n      : 題數（整數）
     """
     grade = request.args.get("grade", Config.ACTIVE_GRADE)
-    n     = int(request.args.get("n", Config.TOTAL_Q))
-
     if grade not in ("elementary_low", "elementary_high", "junior"):
         grade = Config.ACTIVE_GRADE
 
-    questions = get_questions_by_grade(
-        grade=grade, n=n, typo_ratio=Config.WRONG_RATIO
-    )
+    try:
+        n = int(request.args.get("n", Config.TOTAL_Q))
+    except (TypeError, ValueError):
+        n = Config.TOTAL_Q
+    n = max(1, min(n, Config.GRADE_MAX_Q.get(grade, Config.TOTAL_Q)))
 
-    # 所有欄位都給前端（含 answer，前端自行判斷對錯）
+    questions = get_questions_by_grade(grade=grade, n=n)
+
     keys = ["type", "idiom", "display", "options", "answer",
             "correct_char", "hint", "meaning", "explanation", "difficulty"]
     return jsonify({
@@ -55,66 +58,35 @@ def get_all_questions():
 # ── 排行榜 ─────────────────────────────────────
 @main_bp.route("/leaderboard", methods=["GET"])
 def leaderboard_get():
-    # ★ 修改 1：只回傳前 5 名（原本是10）
     return jsonify(get_top(5))
 
 
 @main_bp.route("/leaderboard", methods=["POST"])
 def leaderboard_post():
     data = request.json or {}
-    name     = data.get("name", "").strip() or "匿名"
-    score    = int(data.get("score", 0))
-    total    = int(data.get("total", 100))
-    duration = int(data.get("duration", 0))
 
-    # ── 未來登入系統：可在此接收 user_id，綁定到已登入帳號 ──
-    # user_id = data.get("user_id")  # 預留：登入後由前端帶入
-    # if user_id:
-    #     name = get_username_by_id(user_id)  # 預留：從 users 資料表查名稱
+    # 已登入：使用帳號名稱並記錄 user_id，忽略前端送來的 name
+    if current_user.is_authenticated:
+        name = current_user.username
+        uid  = int(current_user.id)
+    else:
+        name = (data.get("name") or "").strip()[:20] or "匿名"
+        uid  = None
 
-    entry = save_score(name, score, total, duration)
+    try:
+        score    = max(0, min(int(data.get("score",    0)),  10000))
+        total    = max(1, min(int(data.get("total",  100)),  10000))
+        duration = max(0, min(int(data.get("duration", 0)), 86400))
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "error": "invalid payload"}), 400
+
+    entry = save_score(name, score, total, duration, uid)
     return jsonify({"ok": True, "entry": entry})
+
 
 @main_bp.route("/leaderboard/reset", methods=["POST"])
 def leaderboard_reset():
-    from .db import _conn
-    with _conn() as c:
-        c.execute("DELETE FROM scores")
-        c.execute("DELETE FROM sqlite_sequence WHERE name='scores'")
-        c.commit()
+    reset_table()
     return jsonify({"ok": True})
-#清除資料，在瀏覽器 Console 執行
+# 清除資料，在瀏覽器 Console 執行：
 # fetch('/leaderboard/reset', {method:'POST'}).then(r=>r.json()).then(console.log)
-
-
-# ══════════════════════════════════════════════════════════
-# ── 預留：登入系統路由 ─────────────────────────────────
-# 未來實作登入功能時，在此區塊新增路由。
-# 建議搭配 Flask-Login 或 JWT，並在 db.py 新增 users 資料表。
-#
-# @main_bp.route("/auth/register", methods=["POST"])
-# def register():
-#     data = request.json or {}
-#     username = data.get("username", "").strip()
-#     password = data.get("password", "")
-#     # TODO: 驗證、雜湊密碼、寫入 users 資料表
-#     return jsonify({"ok": True, "user_id": new_user_id})
-#
-# @main_bp.route("/auth/login", methods=["POST"])
-# def login():
-#     data = request.json or {}
-#     username = data.get("username", "").strip()
-#     password = data.get("password", "")
-#     # TODO: 驗證帳密、回傳 session token 或 JWT
-#     return jsonify({"ok": True, "token": token, "user_id": user_id, "name": username})
-#
-# @main_bp.route("/auth/logout", methods=["POST"])
-# def logout():
-#     # TODO: 清除 session / 廢止 token
-#     return jsonify({"ok": True})
-#
-# @main_bp.route("/auth/me", methods=["GET"])
-# def me():
-#     # TODO: 從 Authorization header 驗證 token，回傳使用者資訊
-#     return jsonify({"user_id": ..., "name": ..., "best_score": ...})
-# ══════════════════════════════════════════════════════════

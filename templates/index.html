@@ -199,29 +199,29 @@ await startCamera();
                       width:220px;outline:none;transition:border-color .2s"
                onfocus="this.style.borderColor='var(--neon-g)'"
                onblur="this.style.borderColor='var(--border)'">
-        <!-- 預留：登入/註冊按鈕（未來替換此註解） -->
-        <!-- <div style="display:flex;gap:8px;margin-top:4px">
+        <div style="display:flex;gap:8px;margin-top:4px">
           <button id="btn-login"
                   style="font-family:var(--font-mono);font-size:.72rem;padding:5px 14px;
                          border-radius:3px;border:1px solid var(--neon-b);
-                         background:transparent;color:var(--neon-b);cursor:pointer">登入</button>
+                         background:transparent;color:var(--neon-b);cursor:pointer;transition:all .2s">登入</button>
           <button id="btn-register"
                   style="font-family:var(--font-mono);font-size:.72rem;padding:5px 14px;
                          border-radius:3px;border:1px solid var(--border);
-                         background:transparent;color:var(--muted);cursor:pointer">註冊</button>
-        </div> -->
+                         background:transparent;color:var(--muted);cursor:pointer;transition:all .2s">註冊</button>
+        </div>
       </div>
 
       <!-- ── (B) 已登入狀態（登入後顯示，預設隱藏） ──── -->
-      <!-- 實作登入後：移除 display:none，填入帳號資訊 -->
       <div id="logged-in-area" style="display:none;flex-direction:column;align-items:center;gap:6px">
         <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--neon-g)">
           👤 Hi, <span id="logged-in-name">玩家</span>
         </span>
+        <span id="logged-in-best"
+              style="font-family:var(--font-mono);font-size:.68rem;color:var(--neon-y);letter-spacing:.05em"></span>
         <button id="btn-logout"
                 style="font-family:var(--font-mono);font-size:.68rem;padding:4px 12px;
                        border-radius:3px;border:1px solid rgba(255,68,102,0.4);
-                       background:transparent;color:var(--neon-r);cursor:pointer">登出</button>
+                       background:transparent;color:var(--neon-r);cursor:pointer;transition:all .2s">登出</button>
       </div>
 
     </div>
@@ -329,6 +329,28 @@ await startCamera();
   </div>
 </div>
 
+<!-- 登入 / 註冊 Modal -->
+<div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:500;
+     align-items:center;justify-content:center;
+     background:rgba(7,11,18,0.88);backdrop-filter:blur(8px)">
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button id="tab-login"    class="auth-tab auth-tab-active">登入</button>
+      <button id="tab-register" class="auth-tab">註冊</button>
+    </div>
+    <input id="auth-username" class="auth-input" type="text"
+           placeholder="帳號（中英文、數字、底線，2-20字）"
+           maxlength="20" autocomplete="username">
+    <input id="auth-password" class="auth-input" type="password"
+           placeholder="密碼（至少 6 字）"
+           maxlength="50" autocomplete="current-password">
+    <div id="auth-error" class="auth-error"></div>
+    <button id="auth-submit" class="auth-btn-submit">登入</button>
+    <button id="auth-close"  class="auth-btn-close">取消</button>
+  </div>
+</div>
+
+<script src="/static/auth.js"></script>
 <script src="/static/audio.js"></script>
 <script src="/static/effects.js"></script>
 <script>
@@ -621,8 +643,16 @@ const Game = (() => {
   let score        = 0;    // 前端自行維護的分數
 
   async function beginGame() {
-    const res  = await fetch('/get_all_questions');
-    const data = await res.json();
+    let data;
+    try {
+      const res = await fetch('/get_all_questions');
+      if (!res.ok) throw new Error(res.status);
+      data = await res.json();
+    } catch (e) {
+      const st = $('cam-status');
+      if (st) { st.textContent = '⚠ 題目載入失敗，請重整'; st.style.color = 'var(--neon-r)'; }
+      return;
+    }
     allQuestions = data.questions;
     TOTAL_Q = allQuestions.length;
 
@@ -810,8 +840,10 @@ const Game = (() => {
     const timeEl = $('final-duration');
     if (timeEl) timeEl.textContent = `⏱ 遊戲時間：${durationFmt}`;
 
-    // 提交分數（含時間）
-    const playerName = ($('player-name')?.value || '').trim() || '匿名';
+    // 提交分數（登入時使用帳號名稱，否則取輸入框）
+    const playerName = Auth.isLoggedIn()
+      ? Auth.getUsername()
+      : ($('player-name')?.value || '').trim() || '匿名';
     fetch('/leaderboard', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -914,17 +946,15 @@ window.addEventListener('load', () => {
   const muteBtn      = $('vol-mute');
   const pct = v => Math.round(v * 100) + '%';
 
-  masterSlider.addEventListener('input', () => {
-    Audio.setMaster(+masterSlider.value);
-    $('vol-master-val').textContent = pct(masterSlider.value);
-  });
-  bgmSlider.addEventListener('input', () => {
-    Audio.setBGM(+bgmSlider.value);
-    $('vol-bgm-val').textContent = pct(bgmSlider.value);
-  });
-  sfxSlider.addEventListener('input', () => {
-    Audio.setSFX(+sfxSlider.value);
-    $('vol-sfx-val').textContent = pct(sfxSlider.value);
+  [
+    [masterSlider, Audio.setMaster, 'vol-master-val'],
+    [bgmSlider,    Audio.setBGM,    'vol-bgm-val'],
+    [sfxSlider,    Audio.setSFX,    'vol-sfx-val'],
+  ].forEach(([slider, setter, valId]) => {
+    slider.addEventListener('input', () => {
+      setter(+slider.value);
+      $(valId).textContent = pct(slider.value);
+    });
   });
 
   let muted = false, prevMaster = 0.8;
@@ -946,7 +976,8 @@ window.addEventListener('load', () => {
     }
   });
 
-  // 頁面載入時顯示側欄積分榜
+  // 初始化登入狀態，再啟動遊戲
+  Auth.init();
   Game.loadSidebarLeaderboard();
   Game.init();
 });
