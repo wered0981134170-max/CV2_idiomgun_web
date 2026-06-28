@@ -296,6 +296,31 @@ await startCamera();
         </div>
 
       </div>
+
+      <!-- 組字模式按鈕 -->
+      <div style="margin-top:10px;display:flex;justify-content:center">
+        <div class="diff-btn" data-grade="elementary_high" data-mode="compose"
+             style="position:relative;width:180px;height:44px;display:flex;
+                    align-items:center;justify-content:center;
+                    font-family:var(--font-mono);font-size:.85rem;
+                    color:var(--muted);user-select:none;border-radius:5px;
+                    border:1px solid rgba(0,200,255,0.25);transition:color .15s">
+          <span style="position:relative;z-index:1">組字模式</span>
+          <svg style="position:absolute;inset:-6px;width:192px;height:56px;
+                      pointer-events:none;overflow:visible" viewBox="0 0 192 56" fill="none">
+            <rect x="4" y="4" width="184" height="48" rx="5"
+                  stroke="rgba(0,200,255,.12)" stroke-width="3" fill="none"/>
+            <rect class="diff-ring" x="4" y="4" width="184" height="48" rx="5"
+                  stroke="#00c8ff" stroke-width="3" fill="none"
+                  data-circ="464" stroke-dasharray="464" stroke-dashoffset="464"
+                  stroke-linecap="round"
+                  style="transform:rotate(-90deg);transform-origin:96px 28px;
+                         filter:drop-shadow(0 0 6px #00c8ff);
+                         transition:stroke-dashoffset .05s linear"/>
+          </svg>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -306,6 +331,63 @@ await startCamera();
   <div id="idiom-template"></div>
   <div id="corners"></div>
 </div>
+
+<!-- 組字遊戲層 -->
+<div id="compose-layer"
+     style="visibility:hidden;pointer-events:none;
+            position:fixed;inset:0;display:flex;flex-direction:column;
+            align-items:center;justify-content:center;gap:28px;z-index:10">
+
+  <!-- 成語意思提示 -->
+  <div id="compose-hint"
+       style="font-family:var(--font-main);font-size:clamp(1.1rem,2.2vw,1.6rem);
+              color:var(--neon-b);text-align:center;letter-spacing:.08em;
+              text-shadow:0 0 12px rgba(0,200,255,.6);
+              max-width:55vw;line-height:1.5"></div>
+
+  <!-- 四個目標格子 -->
+  <div id="compose-slots" style="display:flex;gap:14px"></div>
+
+  <!-- 完成按鈕（四格填滿才顯示） -->
+  <div id="compose-done-wrap" style="visibility:hidden">
+    <div id="compose-done"
+         style="position:relative;width:140px;height:48px;display:flex;
+                align-items:center;justify-content:center;
+                font-family:var(--font-mono);font-size:1rem;
+                color:var(--neon-g);user-select:none;border-radius:6px;
+                border:2px solid rgba(0,229,160,0.4);
+                background:rgba(0,229,160,0.08);transition:color .15s">
+      <span style="position:relative;z-index:1">完成</span>
+      <svg style="position:absolute;inset:-7px;width:154px;height:62px;
+                  pointer-events:none;overflow:visible" viewBox="0 0 154 62" fill="none">
+        <rect x="4" y="4" width="146" height="54" rx="6"
+              stroke="rgba(0,229,160,.15)" stroke-width="3" fill="none"/>
+        <rect class="compose-done-ring" x="4" y="4" width="146" height="54" rx="6"
+              stroke="#00e5a0" stroke-width="3" fill="none"
+              data-circ="400" stroke-dasharray="400" stroke-dashoffset="400"
+              stroke-linecap="round"
+              style="transform:rotate(-90deg);transform-origin:77px 31px;
+                     filter:drop-shadow(0 0 6px #00e5a0);
+                     transition:stroke-dashoffset .05s linear"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- 字池 -->
+  <div id="compose-pool"
+       style="display:flex;gap:12px;flex-wrap:wrap;
+              max-width:56vw;justify-content:center"></div>
+</div>
+
+<!-- 拖動中的字（跟隨游標） -->
+<div id="compose-drag"
+     style="display:none;position:fixed;pointer-events:none;z-index:999;
+            width:64px;height:64px;align-items:center;justify-content:center;
+            font-family:var(--font-main);font-size:2rem;
+            color:var(--neon-g);text-shadow:0 0 8px rgba(0,229,160,.8);
+            background:rgba(0,229,160,0.12);
+            border:2px solid var(--neon-g);border-radius:8px;
+            transform:translate(-50%,-50%)"></div>
 
 <!-- 單題結果 -->
 <div id="screen-result" style="display:none">
@@ -429,11 +511,14 @@ const $    = id => document.getElementById(id);
 const show = el => { if (el) el.style.display = ''; };
 const hide = el => { if (el) el.style.display = 'none'; };
 
-// ── 難度選擇（由 doStart 手勢選取） ────────────────────────
+// ── 難度 / 模式選擇（由 doStart 手勢選取） ─────────────────
 let selectedDifficulty = 'elementary_high';
+let selectedMode       = 'normal';
 
-const showGame = () => { $('game-layer').style.visibility = 'visible'; $('game-layer').style.pointerEvents = 'auto'; };
-const hideGame = () => { $('game-layer').style.visibility = 'hidden';  $('game-layer').style.pointerEvents = 'none'; };
+const showGame    = () => { $('game-layer').style.visibility = 'visible'; $('game-layer').style.pointerEvents = 'auto'; };
+const hideGame    = () => { $('game-layer').style.visibility = 'hidden';  $('game-layer').style.pointerEvents = 'none'; };
+const showCompose = () => { $('compose-layer').style.visibility = 'visible'; $('compose-layer').style.pointerEvents = 'auto'; };
+const hideCompose = () => { $('compose-layer').style.visibility = 'hidden';  $('compose-layer').style.pointerEvents = 'none'; $('compose-drag').style.display = 'none'; };
 
 // ── 游標 ─────────────────────────────────────────────────
 const Cursor = (() => {
@@ -538,7 +623,8 @@ const Game = (() => {
   function doStart(gs) {
     const diffBtns = Array.from(document.querySelectorAll('.diff-btn')).map(el => {
       const r = el.getBoundingClientRect();
-      return { el, grade: el.dataset.grade, x1: r.left, y1: r.top, x2: r.right, y2: r.bottom };
+      return { el, grade: el.dataset.grade, mode: el.dataset.mode || 'normal',
+               x1: r.left, y1: r.top, x2: r.right, y2: r.bottom };
     });
 
     let hit = null;
@@ -552,9 +638,10 @@ const Game = (() => {
     const aim = Aim.update(hit, gs.thumbActive);
 
     diffBtns.forEach((b, i) => {
-      const hov  = (i === hit && gs.thumbActive);
-      const prog = hov ? Aim.getP(i) : 0;
-      b.el.style.color = hov ? 'var(--neon-g)' : 'var(--muted)';
+      const hov   = (i === hit && gs.thumbActive);
+      const prog  = hov ? Aim.getP(i) : 0;
+      const isCompose = b.mode === 'compose';
+      b.el.style.color = hov ? (isCompose ? 'var(--neon-b)' : 'var(--neon-g)') : 'var(--muted)';
       const ring = b.el.querySelector('.diff-ring');
       if (ring) ring.style.strokeDashoffset = +ring.getAttribute('data-circ') * (1 - prog);
     });
@@ -563,6 +650,7 @@ const Game = (() => {
 
     if (aim.fired) {
       selectedDifficulty = diffBtns[aim.target].grade;
+      selectedMode       = diffBtns[aim.target].mode;
       Aim.reset();
       beginGame();
     }
@@ -571,6 +659,8 @@ const Game = (() => {
   // ── 答題畫面 ───────────────────────────────────────
   function doPlay(gs) {
     if (!currentQ || actionLock) return;
+
+    if (currentQ.type === 'compose') { updateCompose(gs); return; }
 
     // 驅動計時器（tick 和 expire 回呼由 Timer 內部觸發）
     Timer.update();
@@ -639,10 +729,16 @@ const Game = (() => {
   // ── 題目渲染 ───────────────────────────────────────
   function renderQ(q) {
     $('char-row').innerHTML = $('idiom-template').innerHTML = $('corners').innerHTML = '';
-    // Reset inline styles that may have been set for application questions
     const tpl = $('idiom-template');
     tpl.style.fontSize = ''; tpl.style.letterSpacing = ''; tpl.style.maxWidth = ''; tpl.style.textAlign = '';
 
+    if (q.type === 'compose') {
+      hideGame();
+      initCompose(q);
+      return;
+    }
+
+    hideCompose();
     if (q.type === 'wrong') {
       // ── Typo 題：成語四字橫排，_ 隨機填入一個錯字，全部字都可點選 ──
       $('corners').style.display = 'none';
@@ -715,9 +811,10 @@ const Game = (() => {
   let score        = 0;    // 前端自行維護的分數
 
   async function beginGame() {
+    const n = selectedMode === 'compose' ? 5 : 10;
     let data;
     try {
-      const res = await fetch(`/get_all_questions?grade=${selectedDifficulty}`);
+      const res = await fetch(`/get_all_questions?grade=${selectedDifficulty}&mode=${selectedMode}&n=${n}`);
       if (!res.ok) throw new Error(res.status);
       data = await res.json();
     } catch (e) {
@@ -751,16 +848,23 @@ const Game = (() => {
     $('hud-score').textContent = score;
     $('hint-text').textContent = q.hint;
     renderQ(q);
-    showGame();
 
-    Timer.onExpire(() => {
-      if (actionLock) return;
-      actionLock = true;
-      state = 'result';
-      handleTimeout();
-    });
-    Timer.onTick(rem => Audio.onTick(rem));
-    Timer.start(Q_TIME_LIMIT);
+    if (q.type === 'compose') {
+      hide($('timer-bar-wrap'));
+      hide($('hint-text'));
+      showCompose();
+    } else {
+      show($('timer-bar-wrap'));
+      showGame();
+      Timer.onExpire(() => {
+        if (actionLock) return;
+        actionLock = true;
+        state = 'result';
+        handleTimeout();
+      });
+      Timer.onTick(rem => Audio.onTick(rem));
+      Timer.start(Q_TIME_LIMIT);
+    }
 
     state = 'play';
     proceedLock = false;
@@ -790,7 +894,7 @@ const Game = (() => {
     else         { Effects.onWrong(fx, fy);   Audio.onWrong();   }
 
     questionsAnswered++;
-    hideGame();
+    hideGame(); hideCompose();
     showResultCard(d, false);
   }
 
@@ -811,7 +915,7 @@ const Game = (() => {
     };
 
     questionsAnswered++;
-    hideGame();
+    hideGame(); hideCompose();
     showResultCard(d, true);
   }
 
@@ -1000,12 +1104,237 @@ const Game = (() => {
     allQuestions = []; score = 0;
     gameStartTime = 0;
     startHover = null; resultHover = null;
+    selectedMode = 'normal';
+    composeSt.slots = [null,null,null,null]; composeSt.pool = [];
+    composeSt.dragChar = null; composeSt.dragSource = null;
     Aim.reset(); Audio.resetTick();
     hide($('screen-final')); hide($('screen-result'));
-    hideGame(); hide($('hud')); hide($('timer-bar-wrap')); hide($('hint-text'));
+    hideGame(); hideCompose();
+    hide($('hud')); hide($('timer-bar-wrap')); hide($('hint-text'));
     show($('screen-start'));
     loadSidebarLeaderboard();   // 回到首頁，重新載入側欄積分榜
     init();
+  }
+
+  // ══════════════════════════════════════════════════
+  // 組字模式
+  // ══════════════════════════════════════════════════
+
+  const composeSt = {
+    slots: [null, null, null, null],
+    pool: [],           // [{ char, inPool }]
+    dragChar: null,
+    dragSource: null,   // { type:'pool'|'slot', idx }
+    answer: '',
+  };
+
+  function initCompose(q) {
+    composeSt.slots    = [null, null, null, null];
+    composeSt.pool     = q.options.map(c => ({ char: c, inPool: true }));
+    composeSt.dragChar = null;
+    composeSt.dragSource = null;
+    composeSt.answer   = q.answer;
+
+    $('compose-hint').textContent = q.display;
+    renderComposeSlots();
+    renderComposePool();
+    $('compose-done-wrap').style.visibility = 'hidden';
+    $('compose-drag').style.display = 'none';
+  }
+
+  function renderComposeSlots() {
+    const c = $('compose-slots');
+    c.innerHTML = '';
+    for (let i = 0; i < 4; i++) {
+      const char = composeSt.slots[i] || '';
+      const d = document.createElement('div');
+      d.className = 'compose-slot';
+      d.dataset.slotIdx = i;
+      d.style.cssText = [
+        'position:relative','width:72px','height:72px',
+        'display:flex','align-items:center','justify-content:center',
+        "font-family:var(--font-main)",'font-size:2.2rem',
+        'color:var(--neon-g)','background:rgba(8,16,28,0.88)',
+        'border:2px solid rgba(0,229,160,0.22)','border-radius:6px',
+        'transition:border-color .15s'
+      ].join(';');
+      d.innerHTML = `<span style="position:relative;z-index:1">${char}</span>
+        <svg style="position:absolute;inset:-8px;width:88px;height:88px;pointer-events:none;overflow:visible" viewBox="0 0 88 88" fill="none">
+          <rect x="4" y="4" width="80" height="80" rx="6" stroke="rgba(0,229,160,.1)" stroke-width="3" fill="none"/>
+          <rect class="slot-ring" x="4" y="4" width="80" height="80" rx="6"
+                stroke="#00e5a0" stroke-width="3" fill="none"
+                data-circ="320" stroke-dasharray="320" stroke-dashoffset="320"
+                stroke-linecap="round"
+                style="transform:rotate(-90deg);transform-origin:44px 44px;
+                       filter:drop-shadow(0 0 6px #00e5a0);
+                       transition:stroke-dashoffset .05s linear"/>
+        </svg>`;
+      c.appendChild(d);
+    }
+  }
+
+  function renderComposePool() {
+    const c = $('compose-pool');
+    c.innerHTML = '';
+    composeSt.pool.forEach((item, i) => {
+      if (!item.inPool) return;
+      const d = document.createElement('div');
+      d.className = 'pool-char';
+      d.dataset.poolIdx = i;
+      d.style.cssText = [
+        'position:relative','width:60px','height:60px',
+        'display:flex','align-items:center','justify-content:center',
+        "font-family:var(--font-main)",'font-size:1.9rem',
+        'color:var(--text)','background:rgba(8,16,28,0.88)',
+        'border:1px solid rgba(0,229,160,0.2)','border-radius:6px',
+        'transition:border-color .15s'
+      ].join(';');
+      d.innerHTML = `<span style="position:relative;z-index:1">${item.char}</span>
+        <svg style="position:absolute;inset:-6px;width:72px;height:72px;pointer-events:none;overflow:visible" viewBox="0 0 72 72" fill="none">
+          <rect x="4" y="4" width="64" height="64" rx="6" stroke="rgba(0,229,160,.1)" stroke-width="3" fill="none"/>
+          <rect class="pool-ring" x="4" y="4" width="64" height="64" rx="6"
+                stroke="#00e5a0" stroke-width="3" fill="none"
+                data-circ="256" stroke-dasharray="256" stroke-dashoffset="256"
+                stroke-linecap="round"
+                style="transform:rotate(-90deg);transform-origin:36px 36px;
+                       filter:drop-shadow(0 0 6px #00e5a0);
+                       transition:stroke-dashoffset .05s linear"/>
+        </svg>`;
+      c.appendChild(d);
+    });
+  }
+
+  function updateCompose(gs) {
+    const isDragging = composeSt.dragChar !== null;
+    const targets = [];
+
+    if (!isDragging) {
+      // 字池（可拾取）
+      document.querySelectorAll('.pool-char').forEach(el => {
+        const r = el.getBoundingClientRect();
+        targets.push({ type: 'pool', idx: +el.dataset.poolIdx, el,
+                       x1: r.left, y1: r.top, x2: r.right, y2: r.bottom });
+      });
+      // 已填格子（可退回）
+      document.querySelectorAll('.compose-slot').forEach(el => {
+        const i = +el.dataset.slotIdx;
+        if (composeSt.slots[i] !== null) {
+          const r = el.getBoundingClientRect();
+          targets.push({ type: 'slot-remove', idx: i, el,
+                         x1: r.left, y1: r.top, x2: r.right, y2: r.bottom });
+        }
+      });
+      // 完成按鈕
+      if (composeSt.slots.every(s => s !== null)) {
+        const el = $('compose-done');
+        if (el) {
+          const r = el.getBoundingClientRect();
+          targets.push({ type: 'done', idx: 0, el,
+                         x1: r.left, y1: r.top, x2: r.right, y2: r.bottom });
+        }
+      }
+    } else {
+      // 空格子（可放置）
+      document.querySelectorAll('.compose-slot').forEach(el => {
+        const i = +el.dataset.slotIdx;
+        if (composeSt.slots[i] === null) {
+          const r = el.getBoundingClientRect();
+          targets.push({ type: 'slot-place', idx: i, el,
+                         x1: r.left, y1: r.top, x2: r.right, y2: r.bottom });
+        }
+      });
+    }
+
+    // Hit test
+    let hit = null;
+    if (gs.thumbActive) {
+      for (let i = 0; i < targets.length; i++) {
+        const t = targets[i];
+        if (gs.x >= t.x1 && gs.x <= t.x2 && gs.y >= t.y1 && gs.y <= t.y2) { hit = i; break; }
+      }
+    }
+
+    const aim = Aim.update(hit, gs.thumbActive);
+
+    // 更新環形進度
+    targets.forEach((t, i) => {
+      const hov  = (i === hit && gs.thumbActive);
+      const prog = hov ? Aim.getP(i) : 0;
+      const ring = t.el.querySelector('.slot-ring, .pool-ring, .compose-done-ring');
+      if (ring) ring.style.strokeDashoffset = +ring.getAttribute('data-circ') * (1 - prog);
+      t.el.style.borderColor = hov ? 'var(--neon-g)' : '';
+    });
+
+    // 拖動字跟隨游標
+    const dragEl = $('compose-drag');
+    if (isDragging) {
+      dragEl.style.display = 'flex';
+      dragEl.style.left    = gs.x + 'px';
+      dragEl.style.top     = gs.y + 'px';
+      dragEl.textContent   = composeSt.dragChar;
+    } else {
+      dragEl.style.display = 'none';
+    }
+
+    Cursor.update(gs.x, gs.y, gs.thumbActive, 0);
+
+    if (aim.fired) handleComposeFire(targets[aim.target]);
+  }
+
+  function handleComposeFire(target) {
+    if (target.type === 'pool') {
+      // 拾取
+      composeSt.dragChar   = composeSt.pool[target.idx].char;
+      composeSt.dragSource = { type: 'pool', idx: target.idx };
+      composeSt.pool[target.idx].inPool = false;
+      renderComposePool();
+      Aim.reset();
+
+    } else if (target.type === 'slot-place') {
+      // 放置
+      composeSt.slots[target.idx] = composeSt.dragChar;
+      composeSt.dragChar   = null;
+      composeSt.dragSource = null;
+      $('compose-drag').style.display = 'none';
+      renderComposeSlots();
+      checkComposeComplete();
+      Aim.reset();
+
+    } else if (target.type === 'slot-remove') {
+      // 退回原位
+      const removed = composeSt.slots[target.idx];
+      composeSt.slots[target.idx] = null;
+      const item = composeSt.pool.find(p => p.char === removed && !p.inPool);
+      if (item) item.inPool = true;
+      renderComposeSlots();
+      renderComposePool();
+      checkComposeComplete();
+      Aim.reset();
+
+    } else if (target.type === 'done') {
+      // 提交答案
+      actionLock = true;
+      state = 'result';
+      const assembled = composeSt.slots.join('');
+      const correct   = assembled === composeSt.answer;
+      if (correct) { score += 10; Effects.onCorrect(innerWidth/2, innerHeight/2); Audio.onCorrect(); }
+      else         {              Effects.onWrong(innerWidth/2, innerHeight/2);   Audio.onWrong();   }
+      questionsAnswered++;
+      hideCompose();
+      showResultCard({
+        result:      correct ? 'correct' : 'wrong',
+        correct_str: composeSt.answer,
+        meaning:     currentQ.meaning || '',
+        idiom:       currentQ.idiom,
+        score,
+        explanation: EXPLANATIONS[currentQ.idiom] || currentQ.explanation || '',
+      }, false);
+    }
+  }
+
+  function checkComposeComplete() {
+    const done = composeSt.slots.every(s => s !== null);
+    $('compose-done-wrap').style.visibility = done ? 'visible' : 'hidden';
   }
 
   function init() { fh = requestAnimationFrame(frame); }

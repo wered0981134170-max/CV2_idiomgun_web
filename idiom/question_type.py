@@ -39,7 +39,32 @@ def load_all_questions() -> Dict[str, List[Dict]]:
 questions_data = load_all_questions()
 
 
-def get_questions_by_grade(grade: str = "elementary_low", n: int = 10) -> List[Dict]:
+def _get_compose_questions(grade: str, n: int) -> List[Dict]:
+    idioms_list = questions_data.get(grade, [])
+    compose_pool = [d for d in idioms_list if "compose" in d.get("questions", {})]
+    if not compose_pool:
+        return []
+    selected = random.sample(compose_pool, min(n, len(compose_pool)))
+    out = []
+    for idiom_data in selected:
+        q = idiom_data["questions"]["compose"]
+        opts = list(q.get("options", []))
+        random.shuffle(opts)
+        out.append({
+            "type":        "compose",
+            "idiom":       idiom_data["idiom"],
+            "meaning":     idiom_data.get("meaning", ""),
+            "explanation": idiom_data.get("explanation", ""),
+            "display":     q["question"],
+            "answer":      q["answer"],
+            "options":     opts,
+            "hint":        "將字拼成正確的成語",
+        })
+    return out
+
+
+def get_questions_by_grade(grade: str = "elementary_low", n: int = 10,
+                           mode: str = "normal") -> List[Dict]:
     """
     從指定年級的 JSON 檔案中抽取題目。
 
@@ -47,6 +72,9 @@ def get_questions_by_grade(grade: str = "elementary_low", n: int = 10) -> List[D
     每道成語各出一題 typo + 一題 application，共需 n/2 個成語（n 應為偶數）。
     若 n 為奇數，typo 多一題。
     """
+    if mode == "compose":
+        return _get_compose_questions(grade, n)
+
     if grade not in questions_data:
         raise ValueError(f"未知的年級: {grade}")
 
