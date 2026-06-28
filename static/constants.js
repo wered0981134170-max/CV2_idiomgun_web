@@ -28,4 +28,9 @@ let selectedDifficulty = 'elementary_high';
 const showGame    = () => { $('game-layer').style.visibility = 'visible'; $('game-layer').style.pointerEvents = 'auto'; };
 const hideGame    = () => { $('game-layer').style.visibility = 'hidden';  $('game-layer').style.pointerEvents = 'none'; };
 const showCompose = () => { $('compose-layer').style.visibility = 'visible'; $('compose-layer').style.pointerEvents = 'auto'; };
-const hideCompose = () => { $('compose-layer').style.visibility = 'hidden';  $('compose-layer').style.pointerEvents = 'none'; $('compose-drag').style.display = 'none'; };
+const hideCompose = () => {
+  $('compose-layer').style.visibility = 'hidden';
+  $('compose-layer').style.pointerEvents = 'none';
+  $('compose-drag').style.display = 'none';
+  $('compose-done-wrap').style.visibility = 'hidden';
+};
