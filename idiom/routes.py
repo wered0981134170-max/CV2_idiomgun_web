@@ -30,17 +30,13 @@ def get_all_questions():
     if grade not in ("elementary_low", "elementary_high", "junior"):
         grade = Config.ACTIVE_GRADE
 
-    mode = request.args.get("mode", "normal")
-    if mode not in ("normal", "compose"):
-        mode = "normal"
-
     try:
-        n = int(request.args.get("n", Config.TOTAL_Q))
+        n = int(request.args.get("n", 4))
     except (TypeError, ValueError):
-        n = Config.TOTAL_Q
-    n = max(1, min(n, Config.GRADE_MAX_Q.get(grade, Config.TOTAL_Q)))
+        n = 4
+    n = max(1, min(n, 10))
 
-    questions = get_questions_by_grade(grade=grade, n=n, mode=mode)
+    questions = get_questions_by_grade(grade=grade, n=n)
 
     keys = ["type", "idiom", "display", "options", "answer",
             "correct_char", "hint", "meaning", "explanation", "difficulty"]

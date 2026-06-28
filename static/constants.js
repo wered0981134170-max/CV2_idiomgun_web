@@ -21,9 +21,8 @@ const $ = id => document.getElementById(id);
 const show = el => { if (el) el.style.display = ''; };
 const hide = el => { if (el) el.style.display = 'none'; };
 
-// ── 難度 / 模式選擇狀態 ───────────────────────────────────
+// ── 難度選擇狀態 ─────────────────────────────────────────
 let selectedDifficulty = 'elementary_high';
-let selectedMode       = 'normal';
 
 // ── 遊戲層顯示切換 ────────────────────────────────────────
 const showGame    = () => { $('game-layer').style.visibility = 'visible'; $('game-layer').style.pointerEvents = 'auto'; };

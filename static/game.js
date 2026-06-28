@@ -59,10 +59,9 @@ const Game = (() => {
     const aim = Aim.update(hit, gs.thumbActive);
 
     diffBtns.forEach((b, i) => {
-      const hov       = (i === hit && gs.thumbActive);
-      const prog      = hov ? Aim.getP(i) : 0;
-      const isCompose = b.mode === 'compose';
-      b.el.style.color = hov ? (isCompose ? 'var(--neon-b)' : 'var(--neon-g)') : 'var(--muted)';
+      const hov  = (i === hit && gs.thumbActive);
+      const prog = hov ? Aim.getP(i) : 0;
+      b.el.style.color = hov ? 'var(--neon-g)' : 'var(--muted)';
       const ring = b.el.querySelector('.diff-ring');
       if (ring) ring.style.strokeDashoffset = +ring.getAttribute('data-circ') * (1 - prog);
     });
@@ -71,7 +70,6 @@ const Game = (() => {
 
     if (aim.fired) {
       selectedDifficulty = diffBtns[aim.target].grade;
-      selectedMode       = diffBtns[aim.target].mode;
       Aim.reset();
       beginGame();
     }
@@ -208,10 +206,9 @@ const Game = (() => {
 
   // ── 遊戲主流程 ───────────────────────────────────────────
   async function beginGame() {
-    const n = selectedMode === 'compose' ? 5 : 10;
     let data;
     try {
-      const res = await fetch(`/get_all_questions?grade=${selectedDifficulty}&mode=${selectedMode}&n=${n}`);
+      const res = await fetch(`/get_all_questions?grade=${selectedDifficulty}&n=4`);
       if (!res.ok) throw new Error(res.status);
       data = await res.json();
     } catch (e) {
@@ -649,7 +646,6 @@ const Game = (() => {
     questionsAnswered = 0; actionLock = false; proceedLock = false;
     allQuestions = []; score = 0; gameStartTime = 0;
     startHover = null; resultHover = null;
-    selectedMode = 'normal';
     composeSt.slots = [null, null, null, null]; composeSt.pool = [];
     composeSt.dragChar = null; composeSt.dragSource = null;
     Aim.reset(); Audio.resetTick();
