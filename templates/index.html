@@ -226,6 +226,34 @@ await startCamera();
       <span class="meta-tag">15s / 題</span>
       <span class="meta-tag">混合題型</span>
     </div>
+
+    <!-- 難度選擇 -->
+    <div style="margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="font-family:var(--font-mono);font-size:.68rem;color:var(--muted);letter-spacing:.15em">選擇難度</div>
+      <div id="difficulty-btns" style="display:flex;gap:10px">
+        <button class="diff-btn" data-grade="elementary_low"
+                style="font-family:var(--font-mono);font-size:.78rem;padding:6px 18px;
+                       border-radius:4px;border:1px solid rgba(0,229,160,0.3);
+                       background:transparent;color:var(--muted);cursor:pointer;transition:all .2s">
+          簡單
+        </button>
+        <button class="diff-btn diff-btn-active" data-grade="elementary_high"
+                style="font-family:var(--font-mono);font-size:.78rem;padding:6px 18px;
+                       border-radius:4px;border:1px solid var(--neon-g);
+                       background:rgba(0,229,160,0.12);color:var(--neon-g);
+                       cursor:pointer;transition:all .2s;
+                       box-shadow:0 0 8px rgba(0,229,160,0.3)">
+          中等
+        </button>
+        <button class="diff-btn" data-grade="junior"
+                style="font-family:var(--font-mono);font-size:.78rem;padding:6px 18px;
+                       border-radius:4px;border:1px solid rgba(0,229,160,0.3);
+                       background:transparent;color:var(--muted);cursor:pointer;transition:all .2s">
+          困難
+        </button>
+      </div>
+    </div>
+
     <div style="margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:8px">
       <svg width="64" height="64" viewBox="0 0 64 64" style="opacity:.85">
         <circle cx="32" cy="32" r="26" stroke="rgba(0,229,160,.15)" stroke-width="4" fill="none"/>
@@ -370,6 +398,21 @@ const EXPLANATIONS = {
 const $    = id => document.getElementById(id);
 const show = el => { if (el) el.style.display = ''; };
 const hide = el => { if (el) el.style.display = 'none'; };
+
+// ── 難度選擇 ─────────────────────────────────────────────
+let selectedDifficulty = 'elementary_high';
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedDifficulty = btn.dataset.grade;
+    document.querySelectorAll('.diff-btn').forEach(b => {
+      const active = b === btn;
+      b.style.borderColor     = active ? 'var(--neon-g)' : 'rgba(0,229,160,0.3)';
+      b.style.background      = active ? 'rgba(0,229,160,0.12)' : 'transparent';
+      b.style.color           = active ? 'var(--neon-g)' : 'var(--muted)';
+      b.style.boxShadow       = active ? '0 0 8px rgba(0,229,160,0.3)' : '';
+    });
+  });
+});
 
 const showGame = () => { $('game-layer').style.visibility = 'visible'; $('game-layer').style.pointerEvents = 'auto'; };
 const hideGame = () => { $('game-layer').style.visibility = 'hidden';  $('game-layer').style.pointerEvents = 'none'; };
@@ -640,7 +683,7 @@ const Game = (() => {
   async function beginGame() {
     let data;
     try {
-      const res = await fetch('/get_all_questions');
+      const res = await fetch(`/get_all_questions?grade=${selectedDifficulty}`);
       if (!res.ok) throw new Error(res.status);
       data = await res.json();
     } catch (e) {

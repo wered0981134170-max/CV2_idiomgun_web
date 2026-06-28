@@ -3,12 +3,17 @@
     "id": 1,
     "grade": "elementary_high",
     "idiom": "雪上加霜",
-    "meaning": "比喻兩者相爭，俱受損傷",
+    "meaning": "比喻苦上加苦",
     "questions": {
       "typo": {
         "question": "雪上加_",
         "answer": "霜",
         "options": ["雪", "冰", "水"]
+      },
+      "compose": {
+        "question": "比喻苦上加苦",
+        "answer": "雪上加霜",
+        "options": ["學", "雪", "尚", "上", "家", "霜", "加", "傷"]
       },
       "application": {
         "question": "老王不小心扭到腳，現在又被玻璃割破了手，真是____。",
@@ -33,6 +38,11 @@
         "answer": "混",
         "options": ["渾", "昏", "損"]
       },
+      "compose": {
+        "question": "比喻以假亂真",
+        "answer": "魚目混珠",
+        "options": ["魚", "餘", "目", "木", "混", "渾", "珠", "株"]
+      },
       "application": {
         "question": "不肖商人想拿仿冒品來____，欺騙不知情的顧客。",
         "answer": "魚目混珠",
@@ -55,6 +65,11 @@
         "question": "投桃_李",
         "answer": "報",
         "options": ["抱", "爆", "刨"]
+      },
+      "compose": {
+        "question": "比喻朋友間友好往來或相互贈答",
+        "answer": "投桃報李",
+        "options": ["投", "頭", "桃", "陶", "報", "抱", "李",  "禮"]
       },
       "application": {
         "question": "我送她禮物只是____，請你不要另作聯想。",
@@ -79,6 +94,11 @@
         "answer": "惱",
         "options": ["腦", "繞", "瑙"]
       },
+      "compose": {
+        "question": "因羞愧到極點而惱恨發怒",
+        "answer": "惱羞成怒",
+        "options": ["惱", "腦", "羞", "休", "成", "乘", "怒", "努"]
+      },
       "application": {
         "question": "面對大家的不斷指責，他____，發了脾氣。",
         "answer": "惱羞成怒",
@@ -101,6 +121,11 @@
         "question": "_木求魚",
         "answer": "緣",
         "options": ["源", "原", "綠"] 
+      },
+      "compose": {
+        "question": "比喻用錯方法，徒勞無功",
+        "answer": "緣木求魚",
+        "options": ["緣", "原", "木", "慕", "求", "球", "魚", "漁"]
       },
       "application": {
         "question": "不多讀書寫作，要想成為作家，無異於____。",
