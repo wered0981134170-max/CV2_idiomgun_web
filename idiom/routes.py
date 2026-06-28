@@ -31,9 +31,9 @@ def get_all_questions():
         grade = Config.ACTIVE_GRADE
 
     try:
-        n = int(request.args.get("n", 4))
+        n = int(request.args.get("n", 5))
     except (TypeError, ValueError):
-        n = 4
+        n = 5
     n = max(1, min(n, 10))
 
     questions = get_questions_by_grade(grade=grade, n=n)

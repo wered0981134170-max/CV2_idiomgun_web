@@ -39,7 +39,7 @@ def load_all_questions() -> Dict[str, List[Dict]]:
 questions_data = load_all_questions()
 
 
-def get_questions_by_grade(grade: str = "elementary_low", n: int = 4) -> List[Dict]:
+def get_questions_by_grade(grade: str = "elementary_low", n: int = 5) -> List[Dict]:
     """
     從指定年級抽取 n 個成語，每個成語依序出 typo → compose → application 共三題。
     回傳順序：全部 typo → 全部 compose → 全部 application，共 n×3 題。

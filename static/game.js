@@ -208,7 +208,7 @@ const Game = (() => {
   async function beginGame() {
     let data;
     try {
-      const res = await fetch(`/get_all_questions?grade=${selectedDifficulty}&n=4`);
+      const res = await fetch(`/get_all_questions?grade=${selectedDifficulty}&n=5`);
       if (!res.ok) throw new Error(res.status);
       data = await res.json();
     } catch (e) {
