@@ -1,0 +1,3061 @@
+CV2_idiomgun_web/
+├── README.md
+├── aim_system.py
+├── annotation.txt
+├── b_H/
+│   └── hand_landmarker.task
+├── data/
+│   ├── elementary_a_low.json
+│   ├── elementary_b_high.json
+│   └── junior.json
+├── gesture.py
+├── idiom/
+│   ├── app.py
+│   ├── config.py
+│   ├── db.py
+│   ├── game_state.py
+│   ├── leaderboard.db
+│   ├── question_type.py
+│   └── routes.py
+├── requirements.txt
+├── static/
+│   ├── audio/
+│   │   ├── bgm.mp3
+│   │   ├── correct.mp3
+│   │   ├── tick.mp3
+│   │   └── wrong.mp3
+│   ├── audio.js
+│   ├── camera.js
+│   ├── effects.js
+│   └── style.css
+└── templates/
+    └── index.html
+<file path="aim_system.py">
+"""
+aim_system.py  ── 秒準判定模組
+"""
+
+import time
+
+class AimSystem:
+    def __init__(self, hover_time: float = 1.5):
+        self.hover_time     = hover_time
+        self.current_target = None
+        self.hover_start    = None
+        self.progress       = 0.0       # 0.0 ~ 1.0
+        self.fired          = False     # 本幀是否觸發
+
+    def update(self, target_id, thumb_active: bool):
+
+        self.fired = False
+
+        if not thumb_active or target_id is None:
+            self._reset()
+            return False
+
+        if target_id != self.current_target:
+            self.current_target = target_id
+            self.hover_start    = time.time()
+            self.progress       = 0.0
+            return False
+
+        elapsed       = time.time() - self.hover_start
+        self.progress = min(elapsed / self.hover_time, 1.0)
+
+        if self.progress >= 1.0:
+            self.fired = True
+            self._reset()
+            return True
+
+        return False
+
+    def _reset(self):
+        self.current_target = None
+        self.hover_start    = None
+        self.progress       = 0.0
+
+    def get_progress(self, target_id) -> float:
+        if target_id != self.current_target:
+            return 0.0
+        return self.progress
+
+</file>
+
+<file path="annotation.txt">
+# annotation
+
+#==================================
+# annotation
+#==================================
+
+"""
+annotation
+"""
+
+"""annotation"""
+
+CV2_idiomgun_web/
+├── b_H/
+│   └── hand_landmarker.task    
+├── data/
+│   ├── elementary_a_low.json
+│   ├── elementary_b_high.json
+│   └── junior.json
+├── idiom/
+│   ├── app.py                  Flask 主程式入口
+│   ├── camera.py               MediaPipe + OpenCV 影像處理
+│   ├── config.py               全局設定
+│   ├── db.py                   排行榜資料層
+│   ├── game_state.py           遊戲狀態管理
+│   ├── leaderboard.db          排行榜資料庫
+│   ├── question_type.py        題目類型管理
+│   └── routes.py               所有 Flask 路由
+├── aim_system.py               秒準判定模組
+├── gesture.py                  手勢判斷模組
+└── templates/
+│   └── index.html
+├── static/
+│   ├── audio/
+│   │   ├── bgm.mp3
+│   │   ├── correct.mp3
+│   │   ├── tick.mp3
+│   │   └── wrong.mp3
+│   ├── audio.js
+│   ├── camera.js
+│   ├── effects.js
+│   └── style.css
+├── annotation.txt
+├── requirements.txt
+├── README.md
+</file>
+
+<file path="data\elementary_a_low.json">
+[
+  {
+    "id": 1,
+    "grade": "elementary_low",
+    "idiom": "兩敗俱傷",
+    "meaning": "比喻兩者相爭，俱受損傷",
+    "questions": {
+      "typo": {
+        "question": "兩敗_傷",
+        "answer": "俱",
+        "options": ["具", "且", "巨"]
+      },
+      "application": {
+        "question": "這麼多年來，兩兄弟鬥來鬥去，結果當然是_，徒惹他人笑話。",
+        "answer": "兩敗俱傷",
+        "options": [
+          "兩敗俱傷",
+          "按部就班",
+          "亡羊補牢",
+          "守株待兔"
+        ]
+      }
+    }
+  },
+  {
+    "id": 2,
+    "grade": "elementary_low",
+    "idiom": "按部就班",
+    "meaning": "比喻做事依照一定的層次、步驟進行",
+    "questions": {
+      "typo": {
+        "question": "按_就班",
+        "answer": "部",
+        "options": ["步", "倍", "補"]
+      },
+      "application": {
+        "question": "這部機器只要照著指示，_操作就可以順利完成工作。",
+        "answer": "按部就班",
+        "options": [
+          "兩敗俱傷",
+          "按部就班",
+          "杯弓蛇影",
+          "守株待兔"
+        ]
+      }
+    }
+  },
+  {
+    "id": 3,
+    "grade": "elementary_low",
+    "idiom": "九牛一毛",
+    "meaning": "比喻極大數量中的一小部分",
+    "questions": {
+      "typo": {
+        "question": "九_一毛",
+        "answer": "牛",
+        "options": ["羊", "半", "龍"] 
+      },
+      "application": {
+        "question": "這點錢對他來說有如_，他不會在乎的。",
+        "answer": "九牛一毛",
+        "options": [
+          "兩敗俱傷",
+          "杯弓蛇影",
+          "九牛一毛",
+          "按部就班"
+        ]
+      }
+    }
+  },
+  {
+    "id": 4,
+    "grade": "elementary_high",
+    "idiom": "惱羞成怒",
+    "meaning": "因羞愧到極點而惱恨發怒",
+    "questions": {
+      "typo": {
+        "question": "_羞成怒",
+        "answer": "惱",
+        "options": ["腦", "繞", "瑙"]
+      },
+      "application": {
+        "question": "面對大家的不斷指責，他_，發了脾氣。",
+        "answer": "惱羞成怒",
+        "options": [
+          "惱羞成怒",
+          "心平氣和",
+          "百步穿楊",
+          "巾幗英雄"
+        ]
+      }
+    }
+  },
+  {
+    "id": 5,
+    "grade": "elementary_high",
+    "idiom": "緣木求魚",
+    "meaning": "比喻用錯方法，徒勞無功",
+    "questions": {
+      "typo": {
+        "question": "_木求魚",
+        "answer": "緣",
+        "options": ["源", "原", "綠"] 
+      },
+      "application": {
+        "question": "不多讀書寫作，要想成為作家，無異於_。",
+        "answer": "緣木求魚",
+        "options": [
+          "樂極生悲",
+          "如願以償",
+          "緣木求魚",
+          "按部就班"
+        ]
+      }
+    }
+  }
+]
+</file>
+
+<file path="data\elementary_b_high.json">
+[
+  {
+    "id": 1,
+    "grade": "elementary_high",
+    "idiom": "雪上加霜",
+    "meaning": "比喻兩者相爭，俱受損傷",
+    "questions": {
+      "typo": {
+        "question": "雪上加_",
+        "answer": "霜",
+        "options": ["雪", "冰", "水"]
+      },
+      "application": {
+        "question": "老王不小心扭到腳，現在又被玻璃割破了手，真是_。",
+        "answer": "雪上加霜",
+        "options": [
+          "雪上加霜",
+          "魚目混珠",
+          "投桃報李",
+          "惱羞成怒"
+        ]
+      }
+    }
+  },
+  {
+    "id": 2,
+    "grade": "elementary_high",
+    "idiom": "魚目混珠",
+    "meaning": "比喻以假亂真",
+    "questions": {
+      "typo": {
+        "question": "魚目_珠",
+        "answer": "混",
+        "options": ["渾", "昏", "損"]
+      },
+      "application": {
+        "question": "不肖商人想拿仿冒品來_，欺騙不知情的顧客。",
+        "answer": "魚目混珠",
+        "options": [
+          "魚目混珠",
+          "按部就班",
+          "杯弓蛇影",
+          "守株待兔"
+        ]
+      }
+    }
+  },
+  {
+    "id": 3,
+    "grade": "elementary_high",
+    "idiom": "投桃報李",
+    "meaning": "比喻朋友間友好往來或相互贈答",
+    "questions": {
+      "typo": {
+        "question": "投桃_李",
+        "answer": "報",
+        "options": ["抱", "爆", "刨"]
+      },
+      "application": {
+        "question": "我送她禮物只是_，請你不要另作聯想。",
+        "answer": "投桃報李",
+        "options": [
+          "兩敗俱傷",
+          "借花獻佛",
+          "瓜田李下",
+          "按部就班"
+        ]
+      }
+    }
+  },
+  {
+    "id": 4,
+    "grade": "elementary_high",
+    "idiom": "惱羞成怒",
+    "meaning": "因羞愧到極點而惱恨發怒",
+    "questions": {
+      "typo": {
+        "question": "_羞成怒",
+        "answer": "惱",
+        "options": ["腦", "繞", "瑙"]
+      },
+      "application": {
+        "question": "面對大家的不斷指責，他_，發了脾氣。",
+        "answer": "惱羞成怒",
+        "options": [
+          "惱羞成怒",
+          "心平氣和",
+          "百步穿楊",
+          "巾幗英雄"
+        ]
+      }
+    }
+  },
+  {
+    "id": 5,
+    "grade": "elementary_high",
+    "idiom": "緣木求魚",
+    "meaning": "比喻用錯方法，徒勞無功",
+    "questions": {
+      "typo": {
+        "question": "_木求魚",
+        "answer": "緣",
+        "options": ["源", "原", "綠"] 
+      },
+      "application": {
+        "question": "不多讀書寫作，要想成為作家，無異於_。",
+        "answer": "緣木求魚",
+        "options": [
+          "樂極生悲",
+          "如願以償",
+          "緣木求魚",
+          "按部就班"
+        ]
+      }
+    }
+  }
+]
+</file>
+
+<file path="data\junior.json">
+[
+  {
+    "id": 1,
+    "grade": "junior",
+    "idiom": "前倨後恭",
+    "meaning": "比喻待人勢利，態度轉變迅速。貶義。",
+    "questions": {
+      "typo": {
+        "question": "前_後恭",
+        "answer": "倨",
+        "options": ["據", "劇", "侷"]
+      },
+      "application": {
+        "question": "知道我當了主任，他_的態度，令人憎惡。",
+        "answer": "前倨後恭",
+        "options": [
+          "前倨後恭",
+          "魚目混珠",
+          "置若罔聞",
+          "惱羞成怒"
+        ]
+      }
+    }
+  },
+  {
+    "id": 2,
+    "grade": "junior",
+    "idiom": "置若罔聞",
+    "meaning": "雖有耳聞，卻好像沒有聽到一樣不加理會。",
+    "questions": {
+      "typo": {
+        "question": "_若罔聞",
+        "answer": "置",
+        "options": ["制", "質", "製"]
+      },
+      "application": {
+        "question": "當主管的人假如對部屬的意見都_，怎能集思廣益把公司辦好呢？",
+        "answer": "置若罔聞",
+        "options": [
+          "置若罔聞",
+          "按部就班",
+          "杯弓蛇影",
+          "守株待兔"
+        ]
+      }
+    }
+  },
+  {
+    "id": 3,
+    "grade": "junior",
+    "idiom": "管窺蠡測",
+    "meaning": "比喻見識淺陋狹窄",
+    "questions": {
+      "typo": {
+        "question": "管窺_測",
+        "answer": "蠡",
+        "options": ["螽", "釐", "理"]
+      },
+      "application": {
+        "question": "一個人若只在乎身邊的環境，難免會_地看事情，最後讓自己與時代脫節。",
+        "answer": "管窺蠡測",
+        "options": [
+          "管窺蠡測",
+          "借花獻佛",
+          "瓜田李下",
+          "按部就班"
+        ]
+      }
+    }
+  },
+  {
+    "id": 4,
+    "grade": "junior",
+    "idiom": "相濡以沫 ",
+    "meaning": "比喻人同處於困境，而互相以微力救助",
+    "questions": {
+      "typo": {
+        "question": "相濡以_ ",
+        "answer": "沫",
+        "options": ["漠", "末", "默"]
+      },
+      "application": {
+        "question": "這對好朋友在陷於絕境時，彼此_，互相照應。",
+        "answer": "相濡以沫 ",
+        "options": [
+          "相濡以沫 ",
+          "心平氣和",
+          "百步穿楊",
+          "巾幗英雄"
+        ]
+      }
+    }
+  },
+  {
+    "id": 5,
+    "grade": "junior",
+    "idiom": "鳥盡弓藏",
+    "meaning": "比喻事成之後，有功之人卻遭到殺戮或疏遠的命運",
+    "questions": {
+      "typo": {
+        "question": "鳥_弓藏",
+        "answer": "盡",
+        "options": ["進", "近", "竟"] 
+      },
+      "application": {
+        "question": "張良就是懂得適時急流勇退，才能避開如韓信_的下場。",
+        "answer": "鳥盡弓藏",
+        "options": [
+          "樂極生悲",
+          "如願以償",
+          "鳥盡弓藏",
+          "按部就班"
+        ]
+      }
+    }
+  }
+]
+
+
+</file>
+
+<file path="gesture.py">
+"""
+# gesture.py  ── 手勢判斷模組
+"""
+
+def is_index_up(landmarks) -> bool:
+    """
+    食指朝上判斷：
+    - 食指尖(8) 高於食指掌骨根(5)
+    - 中指尖(12) 低於中指第一關節(10)（確保其他手指彎曲）
+    """
+    if not landmarks or len(landmarks) < 13:
+        return False
+    return landmarks[8].y < landmarks[5].y and landmarks[12].y > landmarks[10].y
+
+
+def index_tip_pos(landmarks, frame_w: int, frame_h: int,
+                  safe_l=35, safe_r=None, safe_t=55, safe_b=None) -> tuple[int, int]:
+    """取得食指尖在畫面中的像素座標"""
+    if safe_r is None:
+        safe_r = frame_w - 35
+    if safe_b is None:
+        safe_b = int(frame_h * 0.82)
+    tip = landmarks[8]
+    nx  = max(safe_l, min(safe_r, int(tip.x * frame_w)))
+    ny  = max(safe_t, min(safe_b, int(tip.y * frame_h)))
+    return nx, ny
+</file>
+
+<file path="idiom\app.py">
+"""
+app.py  ── Flask 主程式入口
+"""
+
+import os
+from flask import Flask
+
+from .db import init_db     # 初始化資料庫
+
+# 設定模板和靜態文件的路徑
+template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates'))
+static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static'))
+app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+
+# 註冊路由
+from .routes import main_bp
+app.register_blueprint(main_bp)
+
+# 啟動時建立資料表
+init_db()
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    
+    app.run(host="0.0.0.0", port=port, debug=debug, threaded=True)
+
+
+# python -m idiom.app  
+</file>
+
+<file path="idiom\config.py">
+"""
+config.py  ── 全局設定
+"""
+
+import os
+
+class Config:
+    MODEL_PATH = os.environ.get("MODEL_PATH", "hand_landmarker.task")
+    ACTIVE_GRADE = "elementary_low"   # "elementary_low" 或 "elementary_high" 或 "junior"
+    WRONG_RATIO = 0.5       # 錯誤選項的比例
+    TOTAL_Q = 10            # 總題數
+    GRADE_MAX_Q = {
+        "elementary_low":  10,
+        "elementary_high": 10,
+        "junior":          10,
+    }
+    Q_TIME_LIMIT = 15.0     # 每題的時間限制
+    HOVER_TIME = 1.5        # 懸停時間
+    SMOOTH = 0.65           # 平滑參數(新位置 = 舊位置 * 0.65 + 本次偵測 * 0.35)
+    LOST_TIMEOUT = 0.8      # 失去追蹤的超時時間
+</file>
+
+<file path="idiom\db.py">
+"""
+db.py  ── SQLite 排行榜資料層
+"""
+
+import sqlite3
+import os
+
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "leaderboard.db")
+
+
+def _conn():
+    return sqlite3.connect(DB_PATH)
+
+#建立資料表
+def init_db():
+    with _conn() as c:
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS scores (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                name      TEXT    NOT NULL,
+                score     INTEGER NOT NULL,
+                total     INTEGER NOT NULL DEFAULT 100,
+                duration  INTEGER NOT NULL DEFAULT 0,
+                created_at DATETIME DEFAULT (datetime('now','localtime'))
+            )
+        """)
+        # 舊資料表若缺少 duration 欄位，自動補上
+        try:
+            c.execute("ALTER TABLE scores ADD COLUMN duration INTEGER NOT NULL DEFAULT 0")
+        except Exception:
+            pass
+        c.commit()
+
+#儲存一筆分數，回傳插入的資料
+def save_score(name: str, score: int, total: int = 100, duration: int = 0) -> dict:
+    name = name.strip()[:20] or "匿名"
+    with _conn() as c:
+        cur = c.execute(
+            "INSERT INTO scores (name, score, total, duration) VALUES (?, ?, ?, ?)",
+            (name, score, total, duration)
+        )
+        c.commit()
+        return {"id": cur.lastrowid, "name": name, "score": score, "duration": duration}
+
+#秒數轉 mm:ss 字串
+def _fmt(sec: int) -> str:
+    m, s = divmod(max(0, sec), 60)
+    return f"{m:02d}:{s:02d}"
+
+#取得前 N 名（分數高→低，同分依時間早→晚)
+def get_top(limit: int = 10) -> list[dict]:
+    with _conn() as c:
+        rows = c.execute(
+            """SELECT id, name, score, total, duration, created_at
+               FROM scores
+               ORDER BY score DESC, created_at ASC
+               LIMIT ?""",
+            (limit,)
+        ).fetchall()
+    return [
+        {"rank": i + 1, "id": r[0], "name": r[1], "score": r[2],
+         "total": r[3], "duration": r[4], "duration_fmt": _fmt(r[4]), "time": r[5]}
+        for i, r in enumerate(rows)
+    ]
+
+# # 重置排行榜
+# def reset_table():
+#     with _conn() as c:
+#         c.execute("DELETE FROM scores")
+
+#         # 重置 AUTOINCREMENT 計數器
+#         c.execute(
+#             "DELETE FROM sqlite_sequence WHERE name='scores'"
+#         )
+
+#         c.commit()
+
+
+# # 測試
+# if __name__ == "__main__":
+#     init_db()
+
+#     print("重置前：")
+#     print(get_top())
+
+#     reset_table()
+
+#     print("重置後：")
+#     print(get_top())
+</file>
+
+<file path="idiom\game_state.py">
+"""
+game_state.py  ── 遊戲狀態管理
+"""
+
+import time
+import threading
+
+game_lock = threading.Lock()
+
+game_state = {
+    "state": "start",
+    "q_index": 0,
+    "score": 0,
+    "q_start_time": 0.0,
+    "ans_result": None,
+    "questions": [],
+    "cursor_x": 640,
+    "cursor_y": 360,
+    "thumb_active": False,
+    "hover_target": None,
+    "hover_start": None,
+    "hover_progress": 0.0,
+    "last_seen": time.time(),
+    "last_valid_x": 640,
+    "last_valid_y": 360,
+    "frame_w": 1280,
+    "frame_h": 720,
+    "total_q": 10, 
+}
+</file>
+
+<file path="idiom\question_type.py">
+"""
+question_type.py  ── 題目類型管理
+"""
+ 
+import random
+import json
+import pathlib as pl
+from typing import List, Dict, Any
+import os
+
+# 相對於此文件位置的父目錄中的 data 文件夾
+DATA_DIR = pl.Path(__file__).parent.parent / "data"
+
+FILES = {
+    "elementary_low": "elementary_a_low.json",
+    "elementary_high": "elementary_b_high.json",
+    "junior": "junior.json"
+}
+
+# 載入所有題目資料
+def load_all_questions() -> Dict[str, List[Dict]]:
+    all_data = {}
+    for grade, filename in FILES.items():
+        path = DATA_DIR / filename
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                all_data[grade] = data
+                print(f"已載入 {grade}: {len(data)} 個成語")
+        else:
+            print(f"警告：找不到檔案 {path}")
+            all_data[grade] = []
+    return all_data
+
+
+# 全域資料
+questions_data = load_all_questions()
+
+
+def get_questions_by_grade(grade: str = "elementary_low", n: int = 10,
+                          typo_ratio: float = 0.5) -> List[Dict]:
+    """
+    從指定年級的 JSON 檔案中抽取題目。
+
+    出題順序：前半段全是 typo（錯字）題，後半段全是 application（應用）題。
+    每道成語各出一題 typo + 一題 application，共需 n/2 個成語（n 應為偶數）。
+    若 n 為奇數，typo 多一題。
+    """
+    if grade not in questions_data:
+        raise ValueError(f"未知的年級: {grade}")
+
+    idioms_list = questions_data[grade]
+
+    # 需要幾個成語：typo 和 application 各 ceil/floor(n/2) 題
+    n_typo = (n + 1) // 2          # 前半段：ceil(n/2)
+    n_app  = n // 2                # 後半段：floor(n/2)
+    n_idioms = max(n_typo, n_app)  # 每個成語各出兩種，所以只需 n_idioms 個
+
+    if n_idioms > len(idioms_list):
+        print(f"警告：要求 {n_idioms} 個成語，但僅有 {len(idioms_list)} 個，將全部取出")
+        n_idioms = len(idioms_list)
+        n_typo   = n_idioms
+        n_app    = n_idioms
+
+    selected_idioms = random.sample(idioms_list, n_idioms)
+
+    typo_questions = []
+    app_questions  = []
+
+    for idiom_data in selected_idioms:
+        idiom   = idiom_data["idiom"]
+        q_types = idiom_data.get("questions", {})
+        common  = {
+            "idiom":       idiom,
+            "meaning":     idiom_data.get("meaning", ""),
+            "explanation": idiom_data.get("explanation", ""),
+            "grade":       idiom_data.get("grade"),
+        }
+
+        # ── typo 題 ──
+        if "typo" in q_types:
+            q = q_types["typo"]
+            correct_char = q["answer"]          # 正確字，如 "俱"
+            wrong_opts   = q.get("options", []) # 三個錯字，如 ["具","且","巨"]
+
+            # 隨機選一個錯字填入 _ 位置，變成「兩敗具傷」
+            inserted = random.choice(wrong_opts) if wrong_opts else correct_char
+            display  = q["question"].replace("_", inserted, 1)
+
+            # 四個選項 = 三個錯字 + 正確字，洗牌
+            four_opts = wrong_opts + [correct_char]
+            random.shuffle(four_opts)
+
+            typo_questions.append({
+                **common,
+                "type":         "wrong",
+                "display":      display,        # 如 "兩敗具傷"（已填入錯字）
+                "answer":       inserted,       # 使用者要選出的就是這個被填入的錯字
+                "correct_char": correct_char,   # 正確字（用於結果卡顯示）
+                "options":      four_opts,      # 四個選項供使用者選
+                "hint":         "找出成語中的錯字",
+            })
+
+        # ── application 題 ──
+        if "application" in q_types:
+            q = q_types["application"]
+            app_questions.append({
+                **common,
+                "type":    "application",
+                "display": q["question"],       # 上下文填空句
+                "answer":  q["answer"],         # 完整成語
+                "options": q.get("options", []),
+                "hint":    "選擇正確的成語填入空格",
+            })
+
+    # 各自洗牌（同類題內部隨機），但保持「typo 在前、application 在後」的順序
+    random.shuffle(typo_questions)
+    random.shuffle(app_questions)
+
+    # 截到需要的數量，然後拼接
+    return typo_questions[:n_typo] + app_questions[:n_app]
+
+# ==================== 測試 ====================
+if __name__ == "__main__":
+    print("=== 成語題庫載入測試 ===\n")
+    
+    # 測試 elementary_low
+    qs = get_questions_by_grade(grade="elementary_low", n=8, typo_ratio=0.6)
+    
+    for i, q in enumerate(qs, 1):
+        if q["type"] == "wrong":
+            print(f"[{i:2d}] 找錯字：{q['display']:15} → 答案：{q['answer']}")
+        else:
+            print(f"[{i:2d}] 應用題：{q['display'][:35]:35}... → 答案：{q['answer']}")
+</file>
+
+<file path="idiom\routes.py">
+"""
+routes.py  ── 所有 Flask 路由
+"""
+
+from flask import Blueprint, render_template, Response, jsonify, request
+import time
+
+from .game_state import game_lock, game_state
+from .question_type import get_questions_by_grade
+from .db import save_score, get_top
+from .config import Config
+
+main_bp = Blueprint('main', __name__)
+
+# ── 網頁路由 ─────────────────────────────────────
+@main_bp.route("/")
+def index():
+    return render_template("index.html", total_q=10, q_time=15)
+
+@main_bp.route("/state")
+def get_state():
+    with game_lock:
+        gs = game_state
+        return jsonify({
+            "cursor_x": gs["cursor_x"],
+            "cursor_y": gs["cursor_y"],
+            "thumb_active": gs["thumb_active"],
+            "frame_w": gs["frame_w"],
+            "frame_h": gs["frame_h"],
+        })
+
+
+# ── 遊戲 API ─────────────────────────────────────
+@main_bp.route("/start_game", methods=["POST"])
+def start_game():
+    data = request.json or {}
+
+    # 年級由後端 Config.ACTIVE_GRADE 控制
+    # 未來要支援前端選難度時，改成：
+    #   diff  = data.get("difficulty", "easy")
+    #   grade = DIFFICULTY_MAP.get(diff, Config.ACTIVE_GRADE)
+    grade   = Config.ACTIVE_GRADE
+    total   = Config.GRADE_MAX_Q.get(grade, Config.TOTAL_Q)
+    wrong_r = Config.WRONG_RATIO
+
+    questions = get_questions_by_grade(grade=grade, n=total, typo_ratio=wrong_r)
+
+    with game_lock:
+        gs = game_state
+        gs["state"] = "play"
+        gs["q_index"] = 0
+        gs["score"] = 0
+        gs["questions"] = questions
+        gs["q_start_time"] = time.time()
+        gs["ans_result"] = None
+        gs["total_q"]      = len(questions)
+
+    return jsonify({"ok": True, "total": len(questions)}) 
+
+
+@main_bp.route("/question")
+def get_question():
+    with game_lock:
+        gs = game_state
+        idx = gs["q_index"]
+        qs = gs["questions"]
+        total_q = gs.get("total_q", Config.TOTAL_Q)   
+
+        if idx >= len(qs):
+            return jsonify({"done": True, "score": gs["score"]})
+
+        q = qs[idx]
+        elapsed = time.time() - gs["q_start_time"]
+        remain = max(0.0, 15.0 - elapsed)
+
+        return jsonify({
+            "done": False,
+            "index": idx,
+            "total": total_q,
+            "score": gs["score"],
+            "remain": round(remain, 2),
+            "q_time": 15,
+            **{k: q.get(k) for k in ["type", "idiom", "display", "template", "options", 
+                                    "hint", "difficulty", "explanation", "correct_char"]}
+        })
+
+
+@main_bp.route("/answer", methods=["POST"])
+def submit_answer():
+    data = request.json or {}
+    chosen = data.get("chosen", "")
+
+    with game_lock:
+        gs = game_state
+        idx = gs["q_index"]
+        qs = gs["questions"]
+        if idx >= len(qs):
+            return jsonify({"error": "no question"})
+
+        q = qs[idx]
+        correct = chosen == q["answer"]
+        # typo 題用 correct_char（正確字）顯示，其他題用 answer
+        correct_str = q.get("correct_char") or q["answer"]
+
+        result = "correct" if correct else "wrong"
+        if correct:
+            gs["score"] += 10
+
+        gs["ans_result"] = result
+        gs["state"] = "result"
+
+        return jsonify({
+            "result": result,
+            "correct_str": correct_str,
+            "idiom": q["idiom"],
+            "score": gs["score"],
+        })
+
+
+@main_bp.route("/timeout", methods=["POST"])
+def submit_timeout():
+    with game_lock:
+        gs = game_state
+        idx = gs["q_index"]
+        qs = gs["questions"]
+        if idx >= len(qs):
+            return jsonify({"error": "no question"})
+
+        q = qs[idx]
+        correct_str = q.get("answer", "")
+        gs["ans_result"] = "timeout"
+        gs["state"] = "result"
+
+        return jsonify({
+            "result": "timeout",
+            "correct_str": correct_str,
+            "idiom": q["idiom"],
+            "score": gs["score"],
+        })
+
+
+@main_bp.route("/next", methods=["POST"])
+def next_question():
+    with game_lock:
+        gs = game_state
+        gs["q_index"] += 1
+
+        if gs["q_index"] >= len(gs["questions"]):
+            gs["state"] = "final"
+            return jsonify({"state": "final", "score": gs["score"],
+                            "total": len(gs["questions"])})
+
+        gs["state"] = "play"
+        gs["q_start_time"] = time.time()
+        gs["ans_result"] = None
+        return jsonify({"state": "play", "q_index": gs["q_index"]})
+
+
+@main_bp.route("/reset", methods=["POST"])
+def reset_game():
+    with game_lock:
+        gs = game_state
+        gs["state"] = "start"
+        gs["q_index"] = 0
+        gs["score"] = 0
+        gs["questions"] = []
+    return jsonify({"ok": True})
+
+
+# ── 排行榜 ─────────────────────────────────────
+@main_bp.route("/leaderboard", methods=["GET"])
+def leaderboard_get():
+    return jsonify(get_top(10))
+
+
+@main_bp.route("/leaderboard", methods=["POST"])
+def leaderboard_post():
+    data = request.json or {}
+    name = data.get("name", "").strip() or "匿名"
+    score = int(data.get("score", 0))
+    total = int(data.get("total", 100))
+    duration = int(data.get("duration", 0))
+
+    entry = save_score(name, score, total, duration)
+    return jsonify({"ok": True, "entry": entry})
+</file>
+
+<file path="requirements.txt">
+flask
+gunicorn
+</file>
+
+<file path="static\audio.js">
+/* =====================================================
+   audio.js  ── 音訊系統
+   
+   請將音效檔放到 static/audio/ 資料夾：
+     bgm.mp3          背景音樂（循環）
+     correct.mp3      答對音效
+     wrong.mp3        答錯音效
+     timeout.mp3      超時音效
+     tick.mp3         倒數警示音（最後5秒）
+     start.mp3        遊戲開始音效
+     finish.mp3       遊戲結束音效
+   
+   若沒有對應檔案，該音效會靜默略過（不報錯）
+   ===================================================== */
+
+const Audio = (() => {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // ── 音量節點 ──────────────────────────────────────
+  const masterGain = ctx.createGain();   // 主音量
+  const bgmGain    = ctx.createGain();   // BGM 獨立音量
+  const sfxGain    = ctx.createGain();   // 音效獨立音量
+  masterGain.connect(ctx.destination);
+  bgmGain.connect(masterGain);
+  sfxGain.connect(masterGain);
+
+  masterGain.gain.value = 0.8;
+  bgmGain.gain.value    = 0.5;   // BGM 預設較低
+  sfxGain.gain.value    = 1.0;
+
+  // ── 緩衝快取 ──────────────────────────────────────
+  const buffers = {};
+
+  async function load(key, url) {
+    try {
+      const res  = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.arrayBuffer();
+      buffers[key] = await ctx.decodeAudioData(data);
+    } catch (e) {
+      console.warn(`[Audio] 無法載入 ${url}:`, e.message);
+    }
+  }
+
+  // ── 預載所有音效 ──────────────────────────────────
+  async function init() {
+    await Promise.all([
+      load('bgm',     '/static/audio/bgm.mp3'),
+      load('correct', '/static/audio/correct.mp3'),
+      load('wrong',   '/static/audio/wrong.mp3'),
+      load('timeout', '/static/audio/timeout.mp3'),
+      load('tick',    '/static/audio/tick.mp3'),
+      load('start',   '/static/audio/start.mp3'),
+      load('finish',  '/static/audio/finish.mp3'),
+    ]);
+    console.log('[Audio] 載入完成，已載入：', Object.keys(buffers).join(', '));
+  }
+
+  // ── 播放音效（單次） ──────────────────────────────
+  function play(key, gainNode = sfxGain, rate = 1.0) {
+    if (!buffers[key]) return null;
+    // 瀏覽器要求 resume（首次互動後才能播音）
+    if (ctx.state === 'suspended') ctx.resume();
+    const src = ctx.createBufferSource();
+    src.buffer         = buffers[key];
+    src.playbackRate.value = rate;
+    src.connect(gainNode);
+    src.start(0);
+    return src;
+  }
+
+  // ── BGM（循環） ───────────────────────────────────
+  let bgmSrc    = null;
+  let bgmPlaying = false;
+
+  function playBGM() {
+    if (bgmPlaying || !buffers['bgm']) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    bgmSrc = ctx.createBufferSource();
+    bgmSrc.buffer = buffers['bgm'];
+    bgmSrc.loop   = true;
+    bgmSrc.connect(bgmGain);
+    bgmSrc.start(0);
+    bgmPlaying = true;
+  }
+
+  function stopBGM(fadeTime = 1.5) {
+    if (!bgmSrc || !bgmPlaying) return;
+    const now = ctx.currentTime;
+    bgmGain.gain.setValueAtTime(bgmGain.gain.value, now);
+    bgmGain.gain.linearRampToValueAtTime(0, now + fadeTime);
+    bgmSrc.stop(now + fadeTime);
+    bgmSrc = null;
+    bgmPlaying = false;
+    // 淡出後還原音量
+    setTimeout(() => { bgmGain.gain.value = _bgmVol; }, (fadeTime + 0.1) * 1000);
+  }
+
+  function pauseBGM() {
+    if (ctx.state === 'running') ctx.suspend();
+  }
+
+  function resumeBGM() {
+    if (ctx.state === 'suspended') ctx.resume();
+  }
+
+  // ── 倒數 tick：剩 5 秒時播一次完整 MP3 ──────────
+  let tickPlayed = false;
+  let tickSrc    = null;
+
+  function playTick(remain) {
+    if (tickPlayed) return;
+    if (remain <= 5 && remain > 0) {
+      tickPlayed = true;
+      if (ctx.state === 'suspended') ctx.resume();
+      if (!buffers['tick']) return;
+      tickSrc = ctx.createBufferSource();
+      tickSrc.buffer = buffers['tick'];
+      tickSrc.loop   = false;
+      tickSrc.connect(sfxGain);
+      tickSrc.start(0);
+    }
+  }
+
+  function stopTick() {
+    if (tickSrc) { try { tickSrc.stop(); } catch(e){} tickSrc = null; }
+  }
+
+  function resetTick() { tickPlayed = false; stopTick(); }
+
+  // ── 情境音效 API ──────────────────────────────────
+  function onStart()       { play('start'); playBGM(); resetTick(); }
+  function onCorrect()     { play('correct'); stopTick(); }
+  function onWrong()       { play('wrong');   stopTick(); }
+  function onTimeout()     { stopTick(); play('timeout'); }
+  function onTick(remain)  { playTick(remain); }
+  function onFinish()      { stopBGM(0.8); stopTick(); setTimeout(() => play('finish'), 400); resetTick(); }
+
+  // ── 音量控制 ──────────────────────────────────────
+  let _masterVol = 0.8;
+  let _bgmVol    = 0.5;
+  let _sfxVol    = 1.0;
+
+  function setMaster(v) {
+    _masterVol = v;
+    masterGain.gain.value = v;
+  }
+  function setBGM(v) {
+    _bgmVol = v;
+    bgmGain.gain.value = v;
+  }
+  function setSFX(v) {
+    _sfxVol = v;
+    sfxGain.gain.value = v;
+  }
+
+  function getMaster() { return _masterVol; }
+  function getBGM()    { return _bgmVol; }
+  function getSFX()    { return _sfxVol; }
+
+  return {
+    init,
+    playBGM, stopBGM, pauseBGM, resumeBGM,
+    onStart, onCorrect, onWrong, onTimeout, onTick, onFinish,
+    setMaster, setBGM, setSFX,
+    getMaster, getBGM, getSFX,
+    resetTick, stopTick,
+  };
+})();
+
+</file>
+
+<file path="static\camera.js">
+const video = document.getElementById("camera")
+const statusText = document.getElementById("status")
+
+async function startCamera(){
+
+    try{
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video:true,
+            audio:false
+        })
+
+        video.srcObject = stream
+
+        statusText.innerText = "攝影機已啟動"
+
+    }
+    catch(err){
+
+        console.error(err)
+
+        statusText.innerText = "攝影機權限被拒絕"
+
+    }
+
+}
+</file>
+
+<file path="static\effects.js">
+/* effects.js  ── 射擊動畫 & 視覺特效 */
+
+const Effects = (() => {
+  const layer = document.getElementById('effects-layer');
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
+  layer.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  let W, H;
+  const resize = () => {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  // ── 粒子池 ────────────────────────────────────────────
+  const particles = [];
+
+  class Particle {
+    constructor(x, y, color, vx, vy, life, size, type = 'dot') {
+      this.x = x; this.y = y;
+      this.vx = vx; this.vy = vy;
+      this.life = life; this.maxLife = life;
+      this.size = size; this.color = color;
+      this.type = type;
+      this.alpha = 1;
+    }
+
+    update(dt) {
+      this.x  += this.vx * dt;
+      this.y  += this.vy * dt;
+      this.vy += 120 * dt;
+      this.life -= dt;
+      this.alpha = Math.max(0, this.life / this.maxLife);
+    }
+
+    draw(ctx) {
+      ctx.save();
+      ctx.globalAlpha = this.alpha;
+      ctx.fillStyle   = this.color;
+      if (this.type === 'square') {
+        ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+      } else if (this.type === 'line') {
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth   = this.size;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x - this.vx * 0.06, this.y - this.vy * 0.06);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    get dead() { return this.life <= 0; }
+  }
+
+  // ── 局部爆炸 ──────────────────────────────────────────
+  function burst(x, y, color, count = 28) {
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - .5) * .4;
+      const speed = 140 + Math.random() * 220;
+      const type  = Math.random() < .3 ? 'square' : 'dot';
+      particles.push(new Particle(
+        x, y, color,
+        Math.cos(angle) * speed,
+        Math.sin(angle) * speed - 60,
+        .5 + Math.random() * .4,
+        2 + Math.random() * 4,
+        type
+      ));
+    }
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI * 2 * i) / 6 + Math.random();
+      const speed = 300 + Math.random() * 180;
+      particles.push(new Particle(
+        x, y, color,
+        Math.cos(angle) * speed,
+        Math.sin(angle) * speed,
+        .25, 1.5 + Math.random() * 2, 'line'
+      ));
+    }
+  }
+
+  // ── 全畫面爆炸（答對用）─────────────────────────────
+  const COLORS = ['#00e5a0','#ffd700','#00c8ff','#ffffff','#ff9940','#a0ffcc'];
+
+  function fullscreenBurst(count = 140) {
+    // 從四邊射向中心
+    for (let i = 0; i < count; i++) {
+      const edge = Math.floor(Math.random() * 4);
+      let sx, sy;
+      if      (edge === 0) { sx = Math.random() * W; sy = 0; }
+      else if (edge === 1) { sx = Math.random() * W; sy = H; }
+      else if (edge === 2) { sx = 0;                 sy = Math.random() * H; }
+      else                 { sx = W;                 sy = Math.random() * H; }
+
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      const angle = Math.atan2(H/2 - sy, W/2 - sx) + (Math.random() - .5) * 1.2;
+      const speed = 300 + Math.random() * 500;
+      particles.push(new Particle(
+        sx, sy, color,
+        Math.cos(angle) * speed,
+        Math.sin(angle) * speed,
+        .6 + Math.random() * .6,
+        3 + Math.random() * 7,
+        Math.random() < .35 ? 'square' : 'dot'
+      ));
+    }
+    // 中心向外爆
+    for (let i = 0; i < 60; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 200 + Math.random() * 600;
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      particles.push(new Particle(
+        W/2, H/2, color,
+        Math.cos(angle) * speed,
+        Math.sin(angle) * speed - 80,
+        .5 + Math.random() * .8,
+        2 + Math.random() * 6,
+        Math.random() < .3 ? 'square' : 'dot'
+      ));
+    }
+  }
+
+  // ── 畫面震動 ─────────────────────────────────────────
+  function shakeScreen(duration = 600) {
+    document.body.classList.remove('shake');
+    void document.body.offsetWidth;   // 強制 reflow，讓動畫重播
+    document.body.classList.add('shake');
+    setTimeout(() => document.body.classList.remove('shake'), duration);
+  }
+
+  // ── 衝擊波 ───────────────────────────────────────────
+  const waves = [];
+  function shockwave(x, y, color) {
+    waves.push({ x, y, r: 0, life: 1, color, scale: 1 });
+  }
+  function fullscreenShockwave(color = '#00e5a0') {
+    waves.push({ x: W/2, y: H/2, r: 0, life: 1, color, scale: 8 });
+  }
+
+  // ── 浮字 ─────────────────────────────────────────────
+  const floats = [];
+  function floatText(x, y, text, color) {
+    floats.push({ x, y, text, color, life: 1.2, vy: -60, alpha: 1 });
+  }
+
+  // ── 準線閃光 ─────────────────────────────────────────
+  const reticles = [];
+  function reticleFlash(x, y, color) {
+    reticles.push({ x, y, r: 18, life: .4, color });
+  }
+
+  // ── 公開 API ─────────────────────────────────────────
+  function onCorrect(x, y) {
+    burst(x, y, '#00e5a0', 32);
+    burst(x, y, '#ffffff', 10);
+    shockwave(x, y, '#00e5a0');
+    reticleFlash(x, y, '#00e5a0');
+    floatText(x, y - 30, '正確！+10', '#00e5a0');
+    // 全畫面慶祝
+    fullscreenBurst(140);
+    fullscreenShockwave('#00e5a0');
+  }
+
+  function onWrong(x, y) {
+    burst(x, y, '#ff4466', 24);
+    shockwave(x, y, '#ff4466');
+    floatText(x, y - 30, '答錯了', '#ff4466');
+    reticleFlash(x, y, '#ff4466');
+    // 畫面震動
+    shakeScreen(600);
+  }
+
+  function onTimeout(x, y) {
+    burst(x, y, '#00c8ff', 18);
+    floatText(x, y - 30, '時間到', '#00c8ff');
+    shakeScreen(400);
+  }
+
+  // ── 主迴圈 ───────────────────────────────────────────
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min((now - last) / 1000, .05);
+    last = now;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // 粒子
+    for (let i = particles.length - 1; i >= 0; i--) {
+      particles[i].update(dt);
+      particles[i].draw(ctx);
+      if (particles[i].dead) particles.splice(i, 1);
+    }
+
+    // 衝擊波
+    for (let i = waves.length - 1; i >= 0; i--) {
+      const w = waves[i];
+      w.r    += 600 * dt * (w.scale || 1);
+      w.life -= dt / .5;
+      if (w.life <= 0) { waves.splice(i, 1); continue; }
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, w.life) * 0.5;
+      ctx.strokeStyle = w.color;
+      ctx.lineWidth   = 3;
+      ctx.beginPath();
+      ctx.arc(w.x, w.y, w.r, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 浮字
+    for (let i = floats.length - 1; i >= 0; i--) {
+      const f = floats[i];
+      f.y    += f.vy * dt;
+      f.life -= dt;
+      f.alpha = Math.max(0, f.life);
+      if (f.life <= 0) { floats.splice(i, 1); continue; }
+      ctx.save();
+      ctx.globalAlpha = f.alpha;
+      ctx.font        = 'bold 20px "Noto Serif TC", serif';
+      ctx.fillStyle   = f.color;
+      ctx.textAlign   = 'center';
+      ctx.shadowColor = f.color;
+      ctx.shadowBlur  = 12;
+      ctx.fillText(f.text, f.x, f.y);
+      ctx.restore();
+    }
+
+    // 準線閃光
+    for (let i = reticles.length - 1; i >= 0; i--) {
+      const re = reticles[i];
+      re.r    += 80 * dt;
+      re.life -= dt / .4;
+      if (re.life <= 0) { reticles.splice(i, 1); continue; }
+      const a = Math.max(0, re.life);
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.strokeStyle = re.color;
+      ctx.lineWidth   = 2;
+      const s = re.r * .6;
+      ctx.beginPath();
+      ctx.moveTo(re.x - s, re.y); ctx.lineTo(re.x + s, re.y);
+      ctx.moveTo(re.x, re.y - s); ctx.lineTo(re.x, re.y + s);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(re.x, re.y, re.r, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  return { onCorrect, onWrong, onTimeout, burst, shockwave, floatText };
+})();
+
+</file>
+
+<file path="static\style.css">
+/* =====================================================
+   style.css  ── 成語射擊遊戲 UI
+   Aesthetic: Retro-Arcade / Dark Neon / East Asian Ink
+   ===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+/* ── 變數 ──────────────────────────────────────── */
+:root {
+  --bg:          #070b12;
+  --bg2:         #0d1420;
+  --grid:        rgba(0,200,160,0.04);
+  --neon-g:      #00e5a0;
+  --neon-b:      #00c8ff;
+  --neon-r:      #ff4466;
+  --neon-y:      #ffd700;
+  --text:        #e8f0f8;
+  --muted:       #5a7090;
+  --card-bg:     rgba(10,20,35,0.88);
+  --border:      rgba(0,200,160,0.25);
+  --hover-border:rgba(0,200,160,0.85);
+  --glow-g:      0 0 18px rgba(0,229,160,0.6), 0 0 40px rgba(0,229,160,0.2);
+  --glow-b:      0 0 18px rgba(0,200,255,0.6), 0 0 40px rgba(0,200,255,0.2);
+  --radius:      6px;
+  --font-main:   'Noto Serif TC', 'Microsoft JhengHei', serif;
+  --font-mono:   'Share Tech Mono', monospace;
+}
+
+/* ── Reset ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-main);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── 背景網格 ────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── 掃描線 ──────────────────────────────────── */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.07) 2px,
+    rgba(0,0,0,0.07) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── 版面 ────────────────────────────────────── */
+#app {
+  position: relative;
+  width: 100vw; height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* ── 攝影機容器 ──────────────────────────────── */
+#camera-wrap {
+  position: fixed; inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+#camera-feed {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0.18;
+  filter: saturate(0) brightness(0.7);
+}
+
+/* ── 遊戲畫布覆蓋層 ──────────────────────────── */
+#game-canvas {
+  position: fixed; inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ── 面板通用 ────────────────────────────────── */
+.panel {
+  position: relative;
+  z-index: 10;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+  padding: 40px 48px;
+  max-width: 680px;
+  width: 92vw;
+  text-align: center;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 20%; right: 20%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-g), transparent);
+  border-radius: 99px;
+}
+
+/* ── 開始畫面 ────────────────────────────────── */
+#screen-start { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+.game-title {
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 900;
+  letter-spacing: .15em;
+  color: var(--neon-g);
+  text-shadow: var(--glow-g);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.game-subtitle {
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  color: var(--muted);
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.start-hint {
+  font-size: 1.05rem;
+  color: var(--neon-b);
+  text-shadow: var(--glow-b);
+  letter-spacing: .1em;
+}
+
+.meta-row {
+  display: flex; gap: 20px; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  color: var(--muted);
+}
+
+.meta-tag {
+  background: rgba(0,200,160,0.06);
+  border: 1px solid rgba(0,200,160,0.15);
+  padding: 4px 12px;
+  border-radius: 3px;
+}
+
+/* ── HUD 條 ──────────────────────────────────── */
+#hud {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  padding: 10px 24px;
+  gap: 16px;
+  background: linear-gradient(180deg, rgba(7,11,18,0.92) 0%, transparent 100%);
+}
+
+.hud-item {
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  color: var(--muted);
+  letter-spacing: .1em;
+}
+
+.hud-val {
+  color: var(--neon-g);
+  font-size: 1rem;
+}
+
+#hud-timer {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--neon-g);
+  text-shadow: var(--glow-g);
+  min-width: 80px;
+  text-align: right;
+  transition: color .3s;
+}
+
+#hud-timer.urgent { color: var(--neon-r); text-shadow: 0 0 20px rgba(255,68,102,.7); }
+
+/* ── 計時條 ──────────────────────────────────── */
+#timer-bar-wrap {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 4px; z-index: 20;
+  background: rgba(255,255,255,0.05);
+}
+
+#timer-bar {
+  height: 100%;
+  background: var(--neon-g);
+  box-shadow: 0 0 10px var(--neon-g);
+  transition: width .1s linear, background .3s;
+}
+
+#timer-bar.urgent {
+  background: var(--neon-r);
+  box-shadow: 0 0 10px var(--neon-r);
+}
+
+/* ── 提示文字 ────────────────────────────────── */
+#hint-text {
+  position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  color: var(--muted);
+  letter-spacing: .15em;
+  z-index: 20;
+  white-space: nowrap;
+}
+
+/* ── 選錯字題 ────────────────────────────────── */
+#char-row {
+  position: fixed;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex; gap: 16px;
+  z-index: 15;
+}
+
+.char-box {
+  width: 110px; height: 110px;
+  background: rgba(10,22,38,0.90);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .1s;
+  position: relative;
+  overflow: visible;
+}
+
+.char-box.hovered {
+  border-color: var(--neon-g);
+  box-shadow: var(--glow-g), inset 0 0 24px rgba(0,229,160,0.08);
+  transform: scale(1.06);
+  color: var(--neon-g);
+}
+
+/* ── 填空題 ──────────────────────────────────── */
+#idiom-template {
+  position: fixed;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: .2em;
+  z-index: 15;
+  text-shadow: 0 2px 24px rgba(0,200,255,0.15);
+  pointer-events: none;
+}
+
+#idiom-template .blank {
+  color: var(--neon-b);
+  text-shadow: var(--glow-b);
+  border-bottom: 2px solid var(--neon-b);
+}
+
+/* ── 四角選項 ────────────────────────────────── */
+.corner-box {
+  position: fixed;
+  width: 200px; height: 80px;
+  background: rgba(10,22,38,0.90);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: clamp(1.1rem, 1.8vw, 1.55rem);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: .08em;
+  padding: 0 12px;
+  text-align: center;
+  line-height: 1.2;
+  z-index: 15;
+  overflow: visible;
+  transition: border-color .15s, box-shadow .15s, transform .1s;
+}
+
+.corner-box.hovered {
+  border-color: var(--neon-g);
+  box-shadow: var(--glow-g), inset 0 0 24px rgba(0,229,160,0.08);
+  transform: scale(1.07);
+  color: var(--neon-g);
+}
+
+.corner-box[data-corner="0"] { left: 60px;  top: 80px; }
+.corner-box[data-corner="1"] { right: 60px; top: 80px; }
+.corner-box[data-corner="2"] { left: 60px;  bottom: 120px; }
+.corner-box[data-corner="3"] { right: 60px; bottom: 120px; }
+
+/* ── 結果覆蓋層 ──────────────────────────────── */
+#screen-result {
+  position: fixed; inset: 0;
+  z-index: 30;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(7,11,18,0.75);
+  backdrop-filter: blur(6px);
+}
+
+.result-card {
+  background: rgba(8,16,28,0.97);
+  border-radius: 10px;
+  padding: 56px 72px;
+  min-width: 620px;
+  max-width: 82vw;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  animation: slideUp .3s ease;
+}
+
+.result-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.result-card.correct::before { background: linear-gradient(90deg, transparent, var(--neon-g), transparent); }
+.result-card.wrong::before   { background: linear-gradient(90deg, transparent, var(--neon-r), transparent); }
+.result-card.timeout::before { background: linear-gradient(90deg, transparent, var(--neon-b), transparent); }
+
+.result-status {
+  font-size: 3.6rem;
+  font-weight: 900;
+  margin-bottom: 16px;
+  letter-spacing: .08em;
+}
+.result-status.correct { color: var(--neon-g); text-shadow: var(--glow-g); }
+.result-status.wrong   { color: var(--neon-r); text-shadow: 0 0 18px rgba(255,68,102,.6); }
+.result-status.timeout { color: var(--neon-b); text-shadow: var(--glow-b); }
+
+.result-detail { font-size: 1.8rem;  color: var(--text); margin-bottom: 10px; }
+.result-idiom  { font-size: 1.15rem; color: var(--muted); margin-bottom: 20px; }
+.result-next   { font-family: var(--font-mono); font-size: 1rem; color: var(--muted); letter-spacing: .2em; }
+
+/* ── 最終結果 ────────────────────────────────── */
+#screen-final {
+  position: fixed; inset: 0;
+  z-index: 30;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(7,11,18,0.82);
+  backdrop-filter: blur(8px);
+}
+
+.final-card {
+  background: rgba(8,16,28,0.97);
+  border: 1px solid rgba(0,200,255,0.3);
+  border-radius: 8px;
+  padding: 44px 56px;
+  min-width: 520px;
+  text-align: center;
+  animation: slideUp .4s ease;
+  position: relative;
+}
+
+.final-card::before {
+  content: '';
+  position: absolute; top: 0; left: 20%; right: 20%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-b), transparent);
+}
+
+.final-title {
+  font-size: 2.8rem; font-weight: 900;
+  color: var(--neon-b); text-shadow: var(--glow-b);
+  margin-bottom: 20px; letter-spacing: .1em;
+}
+
+.final-score {
+  font-family: var(--font-mono);
+  font-size: 3.8rem; font-weight: bold;
+  color: var(--neon-y);
+  text-shadow: 0 0 24px rgba(255,215,0,.5);
+  margin-bottom: 8px;
+  letter-spacing: .05em;
+}
+
+.final-rank {
+  font-size: 1.5rem;
+  color: var(--muted);
+  margin-bottom: 28px;
+  letter-spacing: .12em;
+}
+
+.btn-restart {
+  font-family: var(--font-main);
+  font-size: 1rem;
+  color: var(--bg);
+  background: var(--neon-g);
+  border: none;
+  padding: 12px 36px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: .12em;
+  font-weight: 700;
+  transition: transform .1s, box-shadow .2s;
+  box-shadow: 0 0 20px rgba(0,229,160,.4);
+}
+.btn-restart:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 32px rgba(0,229,160,.7);
+}
+
+/* ── 難度選擇器 ──────────────────────────────── */
+.difficulty-selector {
+  display: flex; gap: 10px; justify-content: center; margin-top: 14px;
+}
+
+.diff-btn {
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  padding: 7px 18px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  letter-spacing: .1em;
+  transition: all .2s;
+}
+
+.diff-btn.active, .diff-btn:hover {
+  border-color: var(--neon-g);
+  color: var(--neon-g);
+  background: rgba(0,229,160,0.07);
+}
+
+/* ── 游標 ────────────────────────────────────── */
+#cursor {
+  position: fixed;
+  pointer-events: none;
+  z-index: 100;
+  transform: translate(-50%, -50%);
+  transition: opacity .2s;
+}
+
+#cursor.hidden { opacity: 0; }
+
+/* ── 特效層 ──────────────────────────────────── */
+#effects-layer {
+  position: fixed; inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+/* ── 畫面震動 ────────────────────────────────── */
+@keyframes shake {
+  0%   { transform: translate(0px, 0px); }
+  15%  { transform: translate(-10px, 5px); }
+  30%  { transform: translate(10px, -5px); }
+  45%  { transform: translate(-8px, 8px); }
+  60%  { transform: translate(8px, -8px); }
+  75%  { transform: translate(-5px, 5px); }
+  90%  { transform: translate(5px, -3px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+body.shake {
+  animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* ── CSS 粒子（備用，主要用 Canvas） ────────── */
+.particle {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 999;
+  animation: explode 1.5s ease-out forwards;
+}
+
+@keyframes explode {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--x), var(--y)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* ── 動畫 ────────────────────────────────────── */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+.flash-correct {
+  animation: flashGreen .35s ease forwards;
+}
+.flash-wrong {
+  animation: flashRed .35s ease forwards;
+}
+
+@keyframes flashGreen {
+  0%   { box-shadow: 0 0 0 0 rgba(0,229,160,0); }
+  50%  { box-shadow: 0 0 40px 10px rgba(0,229,160,0.5); }
+  100% { box-shadow: 0 0 0 0 rgba(0,229,160,0); }
+}
+
+@keyframes flashRed {
+  0%   { box-shadow: 0 0 0 0 rgba(255,68,102,0); }
+  50%  { box-shadow: 0 0 40px 10px rgba(255,68,102,0.5); }
+  100% { box-shadow: 0 0 0 0 rgba(255,68,102,0); }
+}
+
+/* ── 答對全畫面爆炸粒子 ──────────────────────── */
+.particle {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 999;
+  animation: explode 1.5s ease-out forwards;
+}
+
+@keyframes explode {
+  0%   { transform: translate(0, 0) scale(1);   opacity: 1; }
+  100% { transform: translate(var(--x), var(--y)) scale(0.3); opacity: 0; }
+}
+
+/* ── 答錯畫面震動 ────────────────────────────── */
+@keyframes shake {
+  0%   { transform: translate(0px,   0px);  }
+  20%  { transform: translate(-10px,  5px); }
+  40%  { transform: translate( 10px, -5px); }
+  60%  { transform: translate( -5px, 10px); }
+  80%  { transform: translate(  5px,-10px); }
+  100% { transform: translate(0px,   0px);  }
+}
+
+.shake {
+  animation: shake 0.6s ease;
+}
+
+/* ── 響應式 ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .char-box { width: 80px; height: 80px; font-size: 2rem; }
+  .corner-box { width: 140px; height: 70px; font-size: clamp(.9rem, 3.5vw, 1.1rem); padding: 0 8px; }
+  .corner-box[data-corner="0"] { left: 10px; top: 60px; }
+  .corner-box[data-corner="1"] { right: 10px; top: 60px; }
+  .corner-box[data-corner="2"] { left: 10px; bottom: 70px; }
+  .corner-box[data-corner="3"] { right: 10px; bottom: 70px; }
+  .result-card { min-width: 92vw; max-width: 92vw; padding: 36px 28px; }
+  .result-status { font-size: 2.4rem; }
+  .result-detail { font-size: 1.3rem; }
+  .final-card  { min-width: 90vw; padding: 32px 24px; }
+}
+
+/* ── 積分榜按鈕（已移除，保留備用） ─────────── */
+
+/* ── 解析區塊 ────────────────────────────────── */
+.explanation-label {
+  font-family: var(--font-mono);
+  font-size: .88rem;
+  color: var(--neon-b);
+  letter-spacing: .15em;
+  margin: 20px 0 10px;
+  text-align: left;
+}
+
+.explanation-text {
+  font-size: 1.15rem;
+  color: rgba(232,240,248,0.88);
+  line-height: 1.8;
+  text-align: left;
+  padding: 14px 20px;
+  background: rgba(0,200,255,0.05);
+  border-left: 3px solid rgba(0,200,255,0.4);
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 20px;
+}
+
+/* ── 側欄積分榜（首頁右上角） ───────────────── */
+.lb-row-side {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 4px;
+  border-radius: 3px;
+  font-size: .68rem;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.lb-top-side { color: var(--text); }
+.lb-rank-side  { text-align: center; font-size: .75rem; }
+.lb-name-side  { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-score-side {
+  font-family: var(--font-mono);
+  color: var(--neon-y);
+  font-size: .72rem;
+  white-space: nowrap;
+}
+
+/* ── 結算頁積分榜 ────────────────────────────── */
+.lb-row-final {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 7px 8px;
+  border-radius: 4px;
+  font-size: .8rem;
+  color: var(--muted);
+  margin-bottom: 3px;
+  border: 1px solid transparent;
+}
+.lb-row-final.lb-top {
+  color: var(--text);
+  background: rgba(0,200,255,0.04);
+  border-color: rgba(0,200,255,0.1);
+}
+.lb-row-final.lb-me {
+  color: var(--neon-g) !important;
+  background: rgba(0,229,160,0.08) !important;
+  border-color: rgba(0,229,160,0.4) !important;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(0,229,160,0.15);
+}
+.lb-score-final {
+  font-family: var(--font-mono);
+  color: var(--neon-y);
+  font-size: .85rem;
+  text-align: right;
+}
+</file>
+
+<file path="templates\index.html">
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>成語射擊 | 手勢闖關</title>
+<link rel="stylesheet" href="/static/style.css">
+
+<script type="module">
+import { HandLandmarker, FilesetResolver }
+  from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.js";
+
+let handLandmarker = null;
+let lastVideoTime  = -1;
+
+async function initMP() {
+  const vision = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+  );
+  handLandmarker = await HandLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath:
+        "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      delegate: "GPU",
+    },
+    runningMode: "VIDEO",
+    numHands: 1,
+  });
+  const st = document.getElementById("cam-status");
+  if (st) { st.textContent = "✅ 偵測器就緒"; st.style.color = "var(--neon-g)"; }
+  window._mpReady = true;
+}
+
+async function startCamera() {
+  const video = document.getElementById("camera-video");
+  const st    = document.getElementById("cam-status");
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 1280, height: 720, facingMode: "user" },
+      audio: false,
+    });
+    video.srcObject = stream;
+    await new Promise(res => { video.onloadedmetadata = res; });
+    video.play();
+    if (st) { st.textContent = "📷 攝影機就緒"; st.style.color = "var(--neon-g)"; }
+  } catch (err) {
+    if (st) { st.textContent = "⚠ " + err.message; st.style.color = "var(--neon-r)"; }
+  }
+}
+
+const SMOOTH = 0.65, LOST_TIMEOUT = 800;
+let smoothX = 0, smoothY = 0, lastValidX = 0, lastValidY = 0, lastSeenTime = 0;
+
+function detectHands(video) {
+  if (!handLandmarker || !video || !video.videoWidth) return;
+  if (video.currentTime === lastVideoTime) return;
+  lastVideoTime = video.currentTime;
+  const now = performance.now();
+  const res = handLandmarker.detectForVideo(video, now);
+  if (res.landmarks && res.landmarks.length > 0) {
+    const lm = res.landmarks[0];
+    lastSeenTime = now;
+
+    // 食指朝上判斷：
+    // 食指尖(8) 高於食指掌骨根(5)
+    // 中指尖(12) 低於中指第一關節(10)（其他手指彎曲）
+    const indexUp  = lm[8].y < lm[5].y;
+    const middleDown = lm[12].y > lm[10].y;
+
+    if (indexUp && middleDown) {
+      const rx = 1 - lm[8].x;
+      const tx = Math.max(0.02, Math.min(0.98, rx))       * window.innerWidth;
+      const ty = Math.max(0.04, Math.min(0.90, lm[8].y))  * window.innerHeight;
+      smoothX = SMOOTH * smoothX + (1 - SMOOTH) * tx;
+      smoothY = SMOOTH * smoothY + (1 - SMOOTH) * ty;
+      lastValidX = smoothX; lastValidY = smoothY;
+      window._gesture = { thumbActive: true, x: smoothX, y: smoothY };
+    } else {
+      window._gesture = { thumbActive: false, x: smoothX, y: smoothY };
+    }
+  } else {
+    if (now - lastSeenTime < LOST_TIMEOUT) {
+      smoothX = lastValidX; smoothY = lastValidY;
+      window._gesture = { thumbActive: true, x: smoothX, y: smoothY };
+    } else {
+      window._gesture = { thumbActive: false, x: smoothX, y: smoothY };
+    }
+  }
+}
+window._detectHands = detectHands;
+window._gesture = { thumbActive: false, x: 0, y: 0 };
+await initMP();
+await startCamera();
+</script>
+</head>
+<body>
+
+<div id="camera-wrap">
+  <video id="camera-video" autoplay playsinline muted
+         style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);
+                opacity:0.45;filter:saturate(0.3) brightness(0.85)"></video>
+</div>
+
+<div id="cam-status"
+     style="position:fixed;top:8px;right:16px;z-index:200;
+            font-family:var(--font-mono);font-size:.72rem;color:var(--muted);letter-spacing:.1em">
+  載入中...
+</div>
+
+<!-- 音量控制面板 -->
+<div id="vol-panel"
+     style="position:fixed;bottom:24px;right:20px;z-index:200;
+            background:rgba(8,16,28,0.90);border:1px solid rgba(0,229,160,0.2);
+            border-radius:6px;padding:12px 16px;backdrop-filter:blur(8px);
+            display:flex;flex-direction:column;gap:8px;min-width:180px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+    <span style="font-family:var(--font-mono);font-size:.72rem;color:var(--muted);letter-spacing:.1em">🔊 音量</span>
+    <button id="vol-mute"
+            style="font-family:var(--font-mono);font-size:.68rem;padding:2px 8px;
+                   border-radius:3px;border:1px solid rgba(0,229,160,0.25);
+                   background:transparent;color:var(--muted);cursor:pointer;transition:all .2s">靜音</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);width:28px">主</span>
+    <input type="range" id="vol-master" min="0" max="1" step="0.01" value="0.8"
+           style="flex:1;accent-color:var(--neon-g);cursor:pointer">
+    <span id="vol-master-val" style="font-family:var(--font-mono);font-size:.65rem;color:var(--neon-g);width:28px;text-align:right">80%</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);width:28px">BGM</span>
+    <input type="range" id="vol-bgm" min="0" max="1" step="0.01" value="0.5"
+           style="flex:1;accent-color:var(--neon-b);cursor:pointer">
+    <span id="vol-bgm-val" style="font-family:var(--font-mono);font-size:.65rem;color:var(--neon-b);width:28px;text-align:right">50%</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);width:28px">SFX</span>
+    <input type="range" id="vol-sfx" min="0" max="1" step="0.01" value="1.0"
+           style="flex:1;accent-color:var(--neon-y);cursor:pointer">
+    <span id="vol-sfx-val" style="font-family:var(--font-mono);font-size:.65rem;color:var(--neon-y);width:28px;text-align:right">100%</span>
+  </div>
+</div>
+
+<div id="effects-layer"></div>
+
+<div id="hud" style="display:none">
+  <span class="hud-item">題目 <span class="hud-val" id="hud-q">1/10</span></span>
+  <span class="hud-item" style="margin-left:12px">分數 <span class="hud-val" id="hud-score">0</span></span>
+</div>
+<div id="timer-bar-wrap" style="display:none"><div id="timer-bar" style="width:100%"></div></div>
+<div id="hint-text" style="display:none"></div>
+
+<div id="cursor" class="hidden">
+  <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+    <circle cx="28" cy="28" r="22" stroke="rgba(0,229,160,0.18)" stroke-width="3" fill="none"/>
+    <circle id="cursor-ring" cx="28" cy="28" r="22" stroke="#00e5a0" stroke-width="3" fill="none"
+            stroke-dasharray="138.23" stroke-dashoffset="138.23" stroke-linecap="round"
+            style="transform:rotate(-90deg);transform-origin:28px 28px;filter:drop-shadow(0 0 6px #00e5a0)"/>
+    <circle cx="28" cy="28" r="5" fill="#00e5a0" style="filter:drop-shadow(0 0 6px #00e5a0)"/>
+    <line x1="4"  y1="28" x2="18" y2="28" stroke="#00e5a0" stroke-width="1.5" opacity=".6"/>
+    <line x1="38" y1="28" x2="52" y2="28" stroke="#00e5a0" stroke-width="1.5" opacity=".6"/>
+    <line x1="28" y1="4"  x2="28" y2="18" stroke="#00e5a0" stroke-width="1.5" opacity=".6"/>
+    <line x1="28" y1="38" x2="28" y2="52" stroke="#00e5a0" stroke-width="1.5" opacity=".6"/>
+  </svg>
+</div>
+
+<!-- 開始畫面 -->
+<div id="screen-start">
+  <div class="panel">
+    <div class="game-title">成語闖關</div>
+    <div class="game-subtitle">IDIOM SHOOTER · GESTURE CONTROL</div>
+    <div class="start-hint">伸出食指 · 停留 1.5 秒 · 開始遊戲</div>
+
+    <!-- 玩家名稱輸入 -->
+    <div style="margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:6px">
+      <label for="player-name"
+             style="font-family:var(--font-mono);font-size:.72rem;color:var(--muted);letter-spacing:.15em">
+        輸入名稱（選填）
+      </label>
+      <input id="player-name" type="text" maxlength="10" placeholder="最多 10 字"
+             style="background:rgba(0,0,0,0.4);border:1px solid var(--border);
+                    border-radius:4px;padding:8px 14px;color:var(--text);
+                    font-family:var(--font-main);font-size:1rem;text-align:center;
+                    width:220px;outline:none;transition:border-color .2s"
+             onfocus="this.style.borderColor='var(--neon-g)'"
+             onblur="this.style.borderColor='var(--border)'">
+    </div>
+
+    <div class="meta-row" style="margin-top:16px">
+      <span class="meta-tag">10 題</span>
+      <span class="meta-tag">15s / 題</span>
+      <span class="meta-tag">混合題型</span>
+    </div>
+    <div style="margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <svg width="64" height="64" viewBox="0 0 64 64" style="opacity:.85">
+        <circle cx="32" cy="32" r="26" stroke="rgba(0,229,160,.15)" stroke-width="4" fill="none"/>
+        <circle id="start-ring" cx="32" cy="32" r="26" stroke="#00e5a0" stroke-width="4" fill="none"
+                stroke-dasharray="163.36" stroke-dashoffset="163.36" stroke-linecap="round"
+                style="transform:rotate(-90deg);transform-origin:32px 32px;
+                       filter:drop-shadow(0 0 8px #00e5a0);transition:stroke-dashoffset .05s linear"/>
+      </svg>
+      <div id="start-status"
+           style="font-family:var(--font-mono);font-size:.72rem;color:var(--muted);letter-spacing:.2em">
+        等待手勢...
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 遊戲題目層 -->
+<div id="game-layer" style="visibility:hidden;pointer-events:none">
+  <div id="char-row"></div>
+  <div id="idiom-template"></div>
+  <div id="corners"></div>
+</div>
+
+<!-- 單題結果 -->
+<div id="screen-result" style="display:none">
+  <div class="result-card" id="result-card">
+    <div class="result-status" id="result-status"></div>
+    <div class="result-detail" id="result-detail"></div>
+    <div class="result-idiom"  id="result-idiom"></div>
+
+    <!-- 解析區塊（答錯/超時才顯示） -->
+    <div id="result-explanation" style="display:none">
+      <div class="explanation-label">📖 成語解析</div>
+      <div class="explanation-text" id="explanation-text"></div>
+    </div>
+
+    <div id="result-next-hint">
+      <div class="result-next" id="result-next" style="display:none">▶ 伸出食指 5 秒繼續</div>
+      <div style="display:none;margin-top:14px;justify-content:center" id="result-ring-wrap">
+        <svg width="48" height="48" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="18" stroke="rgba(255,255,255,.1)" stroke-width="3" fill="none"/>
+          <circle id="result-ring" cx="24" cy="24" r="18" stroke="#00e5a0" stroke-width="3" fill="none"
+                  stroke-dasharray="113.1" stroke-dashoffset="113.1" stroke-linecap="round"
+                  style="transform:rotate(-90deg);transform-origin:24px 24px;
+                         filter:drop-shadow(0 0 6px #00e5a0);transition:stroke-dashoffset .05s linear"/>
+        </svg>
+      </div>
+      <div id="result-auto-hint"
+           style="display:none;font-family:var(--font-mono);font-size:.8rem;
+                  color:var(--neon-b);letter-spacing:.15em;margin-top:10px">
+        2 秒後自動繼續...
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 最終結果 -->
+<div id="screen-final" style="display:none">
+  <div class="final-card">
+    <div class="final-title">遊戲結束！</div>
+    <div class="final-score" id="final-score">0 / 100</div>
+    <div class="final-rank"  id="final-rank">繼續加油</div>
+    <div id="final-duration"
+         style="font-family:var(--font-mono);font-size:.9rem;
+                color:var(--muted);margin-bottom:16px;letter-spacing:.1em"></div>
+
+    <!-- 積分榜（遊戲結束後內嵌顯示） -->
+    <div id="lb-final-wrap" style="margin:20px 0 16px">
+      <div style="font-family:var(--font-mono);font-size:.7rem;color:var(--neon-b);
+                  letter-spacing:.15em;margin-bottom:10px">🏆 積分榜</div>
+      <div id="lb-final-list"
+           style="font-family:var(--font-mono);font-size:.75rem;color:var(--muted)">
+        載入中...
+      </div>
+    </div>
+
+    <button class="btn-restart" onclick="Game.reset()">再玩一次</button>
+  </div>
+</div>
+
+<!-- 積分榜側欄（首頁右上角，遊戲中隱藏） -->
+<div id="lb-sidebar"
+     style="position:fixed;top:48px;right:20px;z-index:15;
+            width:220px;display:none">
+  <div style="background:rgba(8,16,28,0.88);border:1px solid rgba(0,200,255,0.2);
+              border-radius:6px;padding:12px 16px;backdrop-filter:blur(8px)">
+    <div style="font-family:var(--font-mono);font-size:.72rem;color:var(--neon-b);
+                letter-spacing:.15em;margin-bottom:10px;text-align:center">
+      🏆 積分榜
+    </div>
+    <div id="lb-sidebar-list">
+      <div style="font-family:var(--font-mono);font-size:.68rem;color:var(--muted);text-align:center">
+        載入中...
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/audio.js"></script>
+<script src="/static/effects.js"></script>
+<script>
+const HOVER_TIME   = 1.5;
+let TOTAL_Q        = 10;   // 由 beginGame() 從後端取得實際題數後更新
+const Q_TIME_LIMIT = 15.0;
+
+// 成語解析字典（前端備份，確保解析一定顯示）
+const EXPLANATIONS = {
+  "畫蛇添足": "「畫」一條「蛇」，又「添」上腳",
+  "一鼓作氣": "打一次「鼓」，「作」出「氣勢」",
+  "破釜沉舟": "「打破」「鍋釜」，「沉」掉「船」",
+  "一目了然": "「一眼」看去，「了解」「然後」全懂",
+  "一箭雙鵰": "「一箭」射出，「中」兩隻「鳥」",
+  "虎視眈眈": "虎在「看」，「眈眈」地盯著",
+  "青出於藍": "「青色」「出自於」「藍色」之調配",
+  "當機立斷": "「當下的」「機會」立刻「判斷」要不要",
+  "半途而廢": "都到了「一半的路途」，就「作廢」掉了",
+  "如魚得水": "「就如」一條「魚」「得到了」水",
+};
+
+const $    = id => document.getElementById(id);
+const show = el => { if (el) el.style.display = ''; };
+const hide = el => { if (el) el.style.display = 'none'; };
+
+const showGame = () => { $('game-layer').style.visibility = 'visible'; $('game-layer').style.pointerEvents = 'auto'; };
+const hideGame = () => { $('game-layer').style.visibility = 'hidden';  $('game-layer').style.pointerEvents = 'none'; };
+
+// ── 游標 ─────────────────────────────────────────────────
+const Cursor = (() => {
+  const el = $('cursor'), ring = $('cursor-ring'), CIRC = 138.23;
+  function update(x, y, active, prog = 0) {
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    if (active) { el.classList.remove('hidden'); ring.style.strokeDashoffset = CIRC * (1 - prog); }
+    else        { el.classList.add('hidden');    ring.style.strokeDashoffset = CIRC; }
+  }
+  return { update };
+})();
+
+// ── 秒準判定 ─────────────────────────────────────────────
+const Aim = (() => {
+  let cur = null, t0 = null, prog = 0;
+  function update(id, active) {
+    if (!active || id === null) { cur = null; t0 = null; prog = 0; return { fired: false }; }
+    if (id !== cur) { cur = id; t0 = performance.now(); prog = 0; }
+    prog = Math.min((performance.now() - t0) / 1000 / HOVER_TIME, 1);
+    if (prog >= 1) { const c = cur; cur = null; t0 = null; prog = 0; return { fired: true, target: c }; }
+    return { fired: false };
+  }
+  function reset()  { cur = null; t0 = null; prog = 0; }
+  function getP(id) { return id === cur ? prog : 0; }
+  return { update, reset, getP };
+})();
+
+// ── Timer：集中管理倒數計時 ──────────────────────────────
+const Timer = (() => {
+  let endTime     = 0;
+  let running     = false;
+  let expireFired = false;
+  let _onExpire   = null;
+  let _onTick     = null;
+
+  function start(seconds) {
+    endTime     = performance.now() + seconds * 1000;
+    running     = true;
+    expireFired = false;
+  }
+
+  function stop() {
+    running     = false;
+    expireFired = true;   // 停止後不再觸發 expire
+  }
+
+  function remain() {
+    if (!running) return 0;
+    return Math.max(0, (endTime - performance.now()) / 1000);
+  }
+
+  // 每幀由 doPlay 呼叫一次
+  function update() {
+    if (!running) return;
+    const r = remain();
+    if (_onTick && r <= 5 && r > 0) _onTick(r);
+    if (r <= 0 && !expireFired) {
+      expireFired = true;
+      running     = false;
+      if (_onExpire) _onExpire();
+    }
+  }
+
+  function onExpire(fn) { _onExpire = fn; }
+  function onTick(fn)   { _onTick   = fn; }
+
+  return { start, stop, remain, update, onExpire, onTick };
+})();
+
+// ═══════════════════════════════════════════════════════
+// 遊戲主控
+// 狀態：start → play → result → (play | final)
+// questionsAnswered：前端自己計數，答滿 10 題才結算
+// actionLock：防止 doAnswer / doTimeout 重複觸發
+// ═══════════════════════════════════════════════════════
+const Game = (() => {
+
+  let state              = 'start';
+  let currentQ           = null;
+  let questionsAnswered  = 0;
+  let actionLock         = false;
+  let proceedLock        = false;
+  let autoNextTimer      = null;
+  let startHover         = null;
+  let resultHover        = null;
+  let fh                 = null;
+  let gameStartTime      = 0;    // 遊戲開始的時間戳記（ms）
+
+  const g = () => window._gesture || { thumbActive: false, x: 0, y: 0 };
+
+  // ── 幀迴圈 ─────────────────────────────────────────
+  function frame(now) {
+    if (window._detectHands) window._detectHands($('camera-video'));
+    const gs = g();
+    if      (state === 'start')  doStart(gs);
+    else if (state === 'play')   doPlay(gs);
+    else if (state === 'result') doResult(gs);
+    fh = requestAnimationFrame(frame);
+  }
+
+  // ── 開始畫面 ───────────────────────────────────────
+  function doStart(gs) {
+    const ring = $('start-ring'), st = $('start-status'), CIRC = 163.36;
+    if (gs.thumbActive) {
+      if (!startHover) startHover = performance.now();
+      const p = Math.min((performance.now() - startHover) / 1000 / HOVER_TIME, 1);
+      ring.style.strokeDashoffset = CIRC * (1 - p);
+      st.textContent = `準備中… ${Math.round(p * 100)}%`;
+      Cursor.update(gs.x, gs.y, true, p);
+      if (p >= 1) { startHover = null; beginGame(); }
+    } else {
+      startHover = null;
+      ring.style.strokeDashoffset = CIRC;
+      st.textContent = '等待手勢...';
+      Cursor.update(gs.x, gs.y, false, 0);
+    }
+  }
+
+  // ── 答題畫面 ───────────────────────────────────────
+  function doPlay(gs) {
+    if (!currentQ || actionLock) return;
+
+    // 驅動計時器（tick 和 expire 回呼由 Timer 內部觸發）
+    Timer.update();
+
+    // 更新進度條
+    const remain = Timer.remain();
+    $('timer-bar').style.width = ((remain / Q_TIME_LIMIT) * 100) + '%';
+    $('timer-bar').classList.toggle('urgent', remain <= 5);
+
+    Cursor.update(gs.x, gs.y, gs.thumbActive, 0);
+    const boxes = getBoxes();
+    const hit   = hitTest(boxes, gs.x, gs.y);
+    const aim   = Aim.update(hit, gs.thumbActive);
+
+    boxes.forEach((b, i) => {
+      const hov = (i === hit && gs.thumbActive);
+      b.el.classList.toggle('hovered', hov);
+      // char-box 保留 SVG ring 進度動畫
+      const ring = b.el.querySelector('.box-ring');
+      if (ring) ring.style.strokeDashoffset = +ring.getAttribute('data-circ') * (1 - (hov ? Aim.getP(i) : 0));
+      // .box-ring 同時涵蓋 char-box（circle）和 corner-box（rect），統一處理
+    });
+
+    if (aim.fired) {
+      actionLock = true;          // 立刻鎖
+      state = 'result';           // 離開 play 狀態
+      handleAnswer(boxes[aim.target]?.label, aim.target, boxes);
+    }
+  }
+
+  // ── 結果畫面（手動繼續） ───────────────────────────
+  function doResult(gs) {
+    if (autoNextTimer !== null || proceedLock) return;
+
+    const ring = $('result-ring'), CIRC = 113.1;
+    Cursor.update(gs.x, gs.y, gs.thumbActive, 0);
+    if (gs.thumbActive) {
+      if (!resultHover) resultHover = performance.now();
+      const p = Math.min((performance.now() - resultHover) / 1000 / resultHoverTime, 1);
+      ring.style.strokeDashoffset = CIRC * (1 - p);
+      if (p >= 1) { resultHover = null; proceedNext(); }
+    } else {
+      resultHover = null;
+      ring.style.strokeDashoffset = CIRC;
+    }
+  }
+
+  // ── 碰撞偵測 ───────────────────────────────────────
+  function getBoxes() {
+    return Array.from(document.querySelectorAll(
+      currentQ?.type === 'wrong' ? '.char-box' : '.corner-box'
+    )).map(el => {
+      const r = el.getBoundingClientRect();
+      return { el, label: el.dataset.char, x1: r.left, y1: r.top, x2: r.right, y2: r.bottom };
+    });
+  }
+
+  function hitTest(boxes, cx, cy) {
+    for (let i = 0; i < boxes.length; i++) {
+      const b = boxes[i];
+      if (cx > b.x1 && cx < b.x2 && cy > b.y1 && cy < b.y2) return i;
+    }
+    return null;
+  }
+
+  // ── 題目渲染 ───────────────────────────────────────
+  function renderQ(q) {
+    $('char-row').innerHTML = $('idiom-template').innerHTML = $('corners').innerHTML = '';
+    // Reset inline styles that may have been set for application questions
+    const tpl = $('idiom-template');
+    tpl.style.fontSize = ''; tpl.style.letterSpacing = ''; tpl.style.maxWidth = ''; tpl.style.textAlign = '';
+
+    if (q.type === 'wrong') {
+      // ── Typo 題：成語四字橫排，_ 隨機填入一個錯字，全部字都可點選 ──
+      $('corners').style.display = 'none';
+      $('idiom-template').style.display = 'none';
+      $('char-row').style.display = 'flex';
+
+      // q.display = "兩敗_傷"，q.options = ["具","且","巨"]（錯字）
+      // 隨機選一個錯字填入 _，組成完整成語（如「兩敗具傷」）
+      const wrongChar = q.options[Math.floor(Math.random() * q.options.length)];
+      const filled    = q.display.replace('_', wrongChar);
+      const wrongIdx  = filled.indexOf(wrongChar);
+
+      // 四個字全部渲染成方形 char-box，全部可點選
+      // dataset.char：錯字格填 wrongChar，其他格填正確字（讓後端判斷選的是不是錯字）
+      ;[...filled].forEach((ch, ci) => {
+        const d = document.createElement('div');
+        d.className = 'char-box';
+        d.dataset.char = ch;   // 傳給後端的選擇值
+        d.innerHTML = `<span style="position:relative;z-index:1">${ch}</span>
+          <svg style="position:absolute;inset:-10px;width:130px;height:130px;pointer-events:none;overflow:visible" viewBox="0 0 130 130" fill="none">
+            <rect x="5" y="5" width="120" height="120" rx="6" stroke="rgba(0,229,160,.12)" stroke-width="4" fill="none"/>
+            <rect class="box-ring" x="5" y="5" width="120" height="120" rx="6"
+                  stroke="#00e5a0" stroke-width="4" fill="none"
+                  data-circ="480" stroke-dasharray="480" stroke-dashoffset="480" stroke-linecap="round"
+                  style="transform:rotate(-90deg);transform-origin:65px 65px;
+                         filter:drop-shadow(0 0 6px #00e5a0);transition:stroke-dashoffset .05s linear"/>
+          </svg>`;
+        $('char-row').appendChild(d);
+      });
+
+    } else {
+      // ── Application 題：中間顯示上下文句子，四個角落放成語選項 ──
+      $('char-row').style.display = 'none';
+      $('idiom-template').style.display = '';
+      $('corners').style.display = '';
+
+      // 中間顯示問題句子，__ 替換為全形底線
+      $('idiom-template').innerHTML = q.display.replace(/__/g,
+        '<span class="blank" style="border-bottom:2px solid var(--neon-b);color:var(--neon-b);text-shadow:var(--glow-b)">＿＿</span>'
+      );
+      // 句子用較小字體以容納長句
+      $('idiom-template').style.fontSize = 'clamp(1.2rem, 2.5vw, 2rem)';
+      $('idiom-template').style.letterSpacing = '0.05em';
+      $('idiom-template').style.maxWidth = '60vw';
+      $('idiom-template').style.textAlign = 'center';
+
+      q.options.slice(0, 4).forEach((opt, i) => {
+        const d = document.createElement('div');
+        d.className = 'corner-box'; d.dataset.char = opt; d.dataset.corner = i;
+        d.innerHTML = `<span style="position:relative;z-index:1">${opt}</span>
+          <svg style="position:absolute;inset:-10px;width:220px;height:100px;pointer-events:none;overflow:visible" viewBox="0 0 220 100" fill="none">
+            <rect x="5" y="5" width="210" height="90" rx="6" stroke="rgba(0,229,160,.12)" stroke-width="3" fill="none"/>
+            <rect class="box-ring" x="5" y="5" width="210" height="90" rx="6"
+                  stroke="#00e5a0" stroke-width="3" fill="none"
+                  data-circ="600" stroke-dasharray="600" stroke-dashoffset="600" stroke-linecap="round"
+                  style="transform:rotate(0deg);transform-origin:110px 50px;
+                         filter:drop-shadow(0 0 6px #00e5a0);transition:stroke-dashoffset .05s linear"/>
+          </svg>`;
+        $('corners').appendChild(d);
+      });
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  // API 呼叫區
+  // ══════════════════════════════════════════════════
+
+  async function beginGame() {
+    const d = await (await fetch('/start_game', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    })).json();
+    if (!d.ok) return;
+    TOTAL_Q = d.total;            // 依年級更新實際題數
+    questionsAnswered = 0;
+    actionLock = false;
+    gameStartTime = Date.now();   // 記錄開始時間
+    Audio.onStart();
+    hide($('screen-start'));
+    hide($('lb-sidebar'));   // 遊戲開始，隱藏積分榜側欄
+    show($('hud')); show($('timer-bar-wrap')); show($('hint-text'));
+    await loadNextQuestion();
+  }
+
+  // 從後端取題目並渲染，進入 play 狀態
+  async function loadNextQuestion() {
+    const d = await (await fetch('/question')).json();
+    currentQ = d;
+    actionLock = false;
+    Aim.reset();
+    Audio.resetTick();
+    $('hud-q').textContent     = `${d.index + 1}/${TOTAL_Q}`;
+    $('hud-score').textContent = d.score;
+    $('hint-text').textContent = d.hint;
+    renderQ(d);
+    showGame();
+
+    // 設定計時器回呼，然後啟動
+    Timer.onExpire(() => {
+      if (actionLock) return;
+      actionLock = true;
+      state = 'result';
+      handleTimeout();
+    });
+    Timer.onTick(rem => Audio.onTick(rem));
+    Timer.start(Q_TIME_LIMIT);
+
+    state = 'play';
+    proceedLock = false;   // 解鎖，下一題可以正常跳題
+  }
+
+  // 答題處理（從 doPlay 觸發，此時 actionLock=true, state='result'）
+  async function handleAnswer(chosen, idx, boxes) {
+    Timer.stop();
+    const b  = boxes?.[idx];
+    const fx = b ? (b.x1 + b.x2) / 2 : innerWidth / 2;
+    const fy = b ? (b.y1 + b.y2) / 2 : innerHeight / 2;
+    const d  = await (await fetch('/answer', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chosen })
+    })).json();
+    if (d.result === 'correct') { Effects.onCorrect(fx, fy); Audio.onCorrect(); }
+    else                        { Effects.onWrong(fx, fy);   Audio.onWrong();   }
+    questionsAnswered++;
+    if (currentQ) currentQ.score = d.score;
+    d.explanation = EXPLANATIONS[d.idiom] || currentQ?.explanation || '';
+    hideGame();
+    showResultCard(d, false);
+  }
+
+  // 超時處理（由 Timer.onExpire 回呼觸發，此時 actionLock=true, state='result'）
+  async function handleTimeout() {
+    Timer.stop();
+    Audio.stopTick();
+    const d = await (await fetch('/timeout', { method: 'POST' })).json();
+    Effects.onTimeout(innerWidth / 2, innerHeight / 2);
+    Audio.onTimeout();
+    questionsAnswered++;
+    if (currentQ) currentQ.score = d.score;
+    d.explanation = EXPLANATIONS[d.idiom] || currentQ?.explanation || '';
+    hideGame();
+    showResultCard(d, true);
+  }
+
+  // 當前結果的 hover 時間（答錯/超時用 5 秒，答對用 1.5 秒）
+  let resultHoverTime = HOVER_TIME;
+
+  // 顯示結果卡片
+  // autoNext=false → 需比拇指繼續
+  // autoNext=true  → 2 秒後自動（超時）
+  function showResultCard(d, autoNext) {
+    $('result-card').className = 'result-card ' + d.result;
+    const msgs = {
+      correct: ['○ 答對了！', `錯字正是「${d.correct_str}」`, 'correct'],
+      wrong:   ['✕ 答錯了',   `正確答案是「${d.correct_str}」`, 'wrong'],
+      timeout: ['⏱ 時間到',   `正確答案是「${d.correct_str}」`, 'timeout'],
+    };
+    const [status, detail, cls] = msgs[d.result] || msgs.timeout;
+    $('result-status').textContent = status;
+    $('result-status').className   = 'result-status ' + cls;
+    $('result-detail').textContent = detail;
+    $('result-idiom').textContent  = `成語：${d.idiom}　分數：${d.score}`;
+
+    // 解析：答錯或超時才顯示
+    const expEl   = $('result-explanation');
+    const expText = $('explanation-text');
+    if ((d.result === 'wrong' || d.result === 'timeout') && d.explanation) {
+      expText.textContent = d.explanation;
+      show(expEl);
+    } else {
+      hide(expEl);
+    }
+
+    // 答錯時 hover 5 秒，答對 1.5 秒
+    resultHoverTime = (d.result === 'wrong') ? 5.0 : HOVER_TIME;
+
+    if (autoNext) {
+      hide($('result-next'));
+      hide($('result-ring-wrap'));
+      show($('result-auto-hint'));
+      $('result-auto-hint').textContent = '2 秒後自動繼續...';
+      autoNextTimer = setTimeout(() => {
+        autoNextTimer = null;
+        proceedNext();
+      }, 2000);
+    } else {
+      const secLabel = resultHoverTime === 5.0 ? '5' : '1.5';
+      $('result-next').textContent = `▶ 伸出食指 ${secLabel} 秒繼續`;
+      show($('result-next'));
+      $('result-ring-wrap').style.display = 'flex';
+      hide($('result-auto-hint'));
+      $('result-ring').style.strokeDashoffset = '113.1';
+      resultHover = null;
+    }
+
+    show($('screen-result'));
+  }
+
+  // 進入下一題或結算（答滿 10 題才結算）
+  async function proceedNext() {
+    if (proceedLock) return;      // 已在跳題中，直接忽略
+    proceedLock = true;
+    if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
+    hide($('screen-result'));
+    resultHover = null;
+
+    if (questionsAnswered >= TOTAL_Q) {
+      showFinal(currentQ?.score ?? 0);
+      return;
+    }
+
+    await fetch('/next', { method: 'POST' });
+    await loadNextQuestion();
+    // loadNextQuestion 結尾會解鎖 proceedLock
+  }
+
+  function showFinal(score) {
+    state = 'final';
+    proceedLock = false;
+    if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
+    hideGame();
+    hide($('hud')); hide($('timer-bar-wrap')); hide($('hint-text')); hide($('screen-result'));
+    hide($('lb-sidebar'));
+    show($('screen-final'));
+    Audio.onFinish();
+
+    // 計算遊戲時間（秒）
+    const durationSec = Math.round((Date.now() - gameStartTime) / 1000);
+    const mm = String(Math.floor(durationSec / 60)).padStart(2, '0');
+    const ss = String(durationSec % 60).padStart(2, '0');
+    const durationFmt = `${mm}:${ss}`;
+
+    $('final-score').textContent = `${score} / ${TOTAL_Q * 10}`;
+    $('final-rank').textContent =
+      score >= TOTAL_Q * 9 ? '🏆 成語達人' :
+      score >= TOTAL_Q * 7 ? '⭐ 表現良好' :
+      score >= TOTAL_Q * 5 ? '💪 繼續加油' : '📚 多多練習';
+
+    // 顯示遊戲時間
+    const timeEl = $('final-duration');
+    if (timeEl) timeEl.textContent = `⏱ 遊戲時間：${durationFmt}`;
+
+    // 提交分數（含時間）
+    const playerName = ($('player-name')?.value || '').trim() || '匿名';
+    fetch('/leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: playerName, score, total: TOTAL_Q * 10, duration: durationSec })
+    })
+    .then(r => r.json())
+    .then(saved => loadFinalLeaderboard(score, saved?.entry?.id))
+    .catch(() => loadFinalLeaderboard(score, null));
+  }
+
+  // 結算頁積分榜：從後端取榜單，標示「你」的那一列
+  async function loadFinalLeaderboard(myScore, myId) {
+    const listEl = $('lb-final-list');
+    try {
+      const rows = await (await fetch('/leaderboard')).json();
+      if (!rows.length) {
+        listEl.innerHTML = '<div style="color:var(--muted);padding:8px 0">尚無紀錄</div>';
+        return;
+      }
+      const medals = ['🥇', '🥈', '🥉'];
+
+      // 找出「我的」那一列（用 id 比對，若無則用分數找第一個相符的）
+      let myRank = -1;
+      rows.forEach((r, i) => {
+        if (myId && r.id === myId) myRank = i;
+      });
+      if (myRank === -1) {
+        myRank = rows.findIndex(r => r.score === myScore);
+      }
+
+      listEl.innerHTML = rows.map((r, i) => {
+        const isMe = (i === myRank);
+        const dur  = r.duration_fmt || '--:--';
+        return `
+        <div class="lb-row-final ${i < 3 ? 'lb-top' : ''} ${isMe ? 'lb-me' : ''}">
+          <span class="lb-rank">${medals[i] || ('#' + r.rank)}</span>
+          <span class="lb-name">${r.name}${isMe ? ' ◀ 你' : ''}</span>
+          <span class="lb-score-final">${r.score}</span>
+          <span style="font-family:var(--font-mono);font-size:.7rem;
+                       color:var(--muted);white-space:nowrap">⏱${dur}</span>
+        </div>`;
+      }).join('');
+    } catch (e) {
+      listEl.innerHTML = '<div style="color:var(--neon-r);font-size:.75rem">無法載入</div>';
+    }
+  }
+
+  // 側欄積分榜（首頁右上角）
+  async function loadSidebarLeaderboard() {
+    const listEl = $('lb-sidebar-list');
+    show($('lb-sidebar'));
+    try {
+      const rows = await (await fetch('/leaderboard')).json();
+      if (!rows.length) {
+        listEl.innerHTML = '<div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);text-align:center;padding:6px 0">尚無紀錄</div>';
+        return;
+      }
+      const medals = ['🥇', '🥈', '🥉'];
+      listEl.innerHTML = rows.map((r, i) => `
+        <div class="lb-row-side ${i < 3 ? 'lb-top-side' : ''}">
+          <span class="lb-rank-side">${medals[i] || r.rank}</span>
+          <span class="lb-name-side">${r.name}</span>
+          <span class="lb-score-side">${r.score}</span>
+        </div>
+      `).join('');
+    } catch (e) {
+      listEl.innerHTML = '<div style="font-size:.65rem;color:var(--neon-r)">無法載入</div>';
+    }
+  }
+
+  async function reset() {
+    cancelAnimationFrame(fh);
+    if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
+    Timer.stop();
+    await fetch('/reset', { method: 'POST' });
+    state = 'start'; currentQ = null;
+    questionsAnswered = 0; actionLock = false; proceedLock = false;
+    gameStartTime = 0;
+    startHover = null; resultHover = null;
+    Aim.reset(); Audio.resetTick();
+    hide($('screen-final')); hide($('screen-result'));
+    hideGame(); hide($('hud')); hide($('timer-bar-wrap')); hide($('hint-text'));
+    show($('screen-start'));
+    $('start-ring').style.strokeDashoffset = '163.36';
+    $('start-status').textContent = '等待手勢...';
+    loadSidebarLeaderboard();   // 回到首頁，重新載入側欄積分榜
+    init();
+  }
+
+  function init() { fh = requestAnimationFrame(frame); }
+  return { reset, init, loadSidebarLeaderboard };
+})();
+
+// ── 音量控制初始化 ────────────────────────────────────────
+window.addEventListener('load', () => {
+  Audio.init();
+  const masterSlider = $('vol-master');
+  const bgmSlider    = $('vol-bgm');
+  const sfxSlider    = $('vol-sfx');
+  const muteBtn      = $('vol-mute');
+  const pct = v => Math.round(v * 100) + '%';
+
+  masterSlider.addEventListener('input', () => {
+    Audio.setMaster(+masterSlider.value);
+    $('vol-master-val').textContent = pct(masterSlider.value);
+  });
+  bgmSlider.addEventListener('input', () => {
+    Audio.setBGM(+bgmSlider.value);
+    $('vol-bgm-val').textContent = pct(bgmSlider.value);
+  });
+  sfxSlider.addEventListener('input', () => {
+    Audio.setSFX(+sfxSlider.value);
+    $('vol-sfx-val').textContent = pct(sfxSlider.value);
+  });
+
+  let muted = false, prevMaster = 0.8;
+  muteBtn.addEventListener('click', () => {
+    muted = !muted;
+    if (muted) {
+      prevMaster = Audio.getMaster();
+      Audio.setMaster(0); masterSlider.value = 0;
+      $('vol-master-val').textContent = '0%';
+      muteBtn.textContent = '恢復';
+      muteBtn.style.borderColor = 'var(--neon-r)';
+      muteBtn.style.color = 'var(--neon-r)';
+    } else {
+      Audio.setMaster(prevMaster); masterSlider.value = prevMaster;
+      $('vol-master-val').textContent = pct(prevMaster);
+      muteBtn.textContent = '靜音';
+      muteBtn.style.borderColor = 'rgba(0,229,160,0.25)';
+      muteBtn.style.color = 'var(--muted)';
+    }
+  });
+
+  // 頁面載入時顯示側欄積分榜
+  Game.loadSidebarLeaderboard();
+  Game.init();
+});
+</script>
+</body>
+</html>
+</file>
+

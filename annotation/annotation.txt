@@ -1,0 +1,106 @@
+# annotation
+
+#==================================
+# annotation
+#==================================
+
+"""
+annotation
+"""
+
+"""annotation"""
+
+#==================================
+# 1155版
+#==================================
+CV2_idiomgun_web/
+├── b_H/
+│   └── hand_landmarker.task    
+├── data/
+│   ├── elementary_a_low.json
+│   ├── elementary_b_high.json
+│   └── junior.json
+├── idiom/
+│   ├── app.py                  Flask 主程式入口
+│   ├── camera.py               MediaPipe + OpenCV 影像處理
+│   ├── config.py               全局設定
+│   ├── db.py                   排行榜資料層
+│   ├── game_state.py           遊戲狀態管理
+│   ├── leaderboard.db          排行榜資料庫
+│   ├── question_type.py        題目類型管理
+│   └── routes.py               所有 Flask 路由
+├── aim_system.py               秒準判定模組
+├── gesture.py                  手勢判斷模組
+└── templates/
+│   └── index.html
+├── static/
+│   ├── audio/
+│   │   ├── bgm.mp3
+│   │   ├── correct.mp3
+│   │   ├── tick.mp3
+│   │   └── wrong.mp3
+│   ├── audio.js
+│   ├── camera.js
+│   ├── effects.js
+│   └── style.css
+├── annotation.txt
+├── requirements.txt
+├── README.md
+
+#==================================
+# 1156版(第一版)
+#==================================
+├── README.md
+├── aim_system.py
+├── annotation.txt
+├── b_H/
+│   └── hand_landmarker.task
+├── data/
+│   ├── elementary_a_low.json
+│   ├── elementary_b_high.json
+│   └── junior.json
+├── gesture.py
+├── idiom/
+│   ├── app.py
+│   ├── config.py
+│   ├── db.py
+│   ├── game_state.py
+│   ├── leaderboard.db
+│   ├── question_type.py
+│   └── routes.py
+├── requirements.txt
+├── static/
+│   ├── audio/
+│   │   ├── bgm.mp3
+│   │   ├── correct.mp3
+│   │   ├── tick.mp3
+│   │   └── wrong.mp3
+│   ├── audio.js
+│   ├── camera.js
+│   ├── effects.js
+│   └── style.css
+└── templates/
+    └── index.html
+
+壓力測試
+[2026-06-10 15:04:37,603] LAPTOP-9MC65O7C/INFO/locust.main: Shutting down (exit code 1)
+Type     Name                                                                   # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s
+--------|---------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+GET      /question                                                               12135     8(0.07%) |    495      71  256943     91 |    9.79        0.01
+POST     /start_game                                                                25     0(0.00%) |    206     123     390    150 |    0.02        0.00
+--------|---------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+         Aggregated                                                              12160     8(0.07%) |    495      71  256943     92 |    9.81        0.01
+
+Response time percentiles (approximated)
+Type     Name                                                                           50%    66%    75%    80%    90%    95%    98%    99%  99.9% 99.99%   100% # reqs
+--------|-------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+GET      /question                                                                       91    100    110    140    310    570   2400   7100  69000 182000 257000  12135
+POST     /start_game                                                                    150    220    320    330    340    370    390    390    390    390    390     25
+--------|-------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+         Aggregated                                                                      92    100    110    140    310    560   2400   7100  69000 182000 257000  12160
+
+Error report
+# occurrences      Error                                                                                               
+------------------|--------------------------------------------------------------------------------------------------------------------------------------
+8                  GET /question: ConnectionResetError(10054, '遠端主機已強制關閉一個現存的連線。', None, 10054, None)                  
+------------------|--------------------------------------------------------------------------------------------------------------------------------------
