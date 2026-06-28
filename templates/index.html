@@ -169,7 +169,7 @@ await startCamera();
   <div class="panel">
     <div class="game-title">成語闖關</div>
     <div class="game-subtitle">IDIOM SHOOTER · GESTURE CONTROL</div>
-    <div class="start-hint">伸出食指 · 停留 1.5 秒 · 開始遊戲</div>
+    <div class="start-hint">伸出食指 · 懸停難度 1.5 秒 · 開始遊戲</div>
 
     <!-- 玩家名稱輸入 / 登入系統預留區塊 -->
     <!--
@@ -227,44 +227,74 @@ await startCamera();
       <span class="meta-tag">混合題型</span>
     </div>
 
-    <!-- 難度選擇 -->
-    <div style="margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:8px">
+    <!-- 難度選擇（食指懸停 1.5 秒開始） -->
+    <div style="margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:12px">
       <div style="font-family:var(--font-mono);font-size:.68rem;color:var(--muted);letter-spacing:.15em">選擇難度</div>
-      <div id="difficulty-btns" style="display:flex;gap:10px">
-        <button class="diff-btn" data-grade="elementary_low"
-                style="font-family:var(--font-mono);font-size:.78rem;padding:6px 18px;
-                       border-radius:4px;border:1px solid rgba(0,229,160,0.3);
-                       background:transparent;color:var(--muted);cursor:pointer;transition:all .2s">
-          簡單
-        </button>
-        <button class="diff-btn diff-btn-active" data-grade="elementary_high"
-                style="font-family:var(--font-mono);font-size:.78rem;padding:6px 18px;
-                       border-radius:4px;border:1px solid var(--neon-g);
-                       background:rgba(0,229,160,0.12);color:var(--neon-g);
-                       cursor:pointer;transition:all .2s;
-                       box-shadow:0 0 8px rgba(0,229,160,0.3)">
-          中等
-        </button>
-        <button class="diff-btn" data-grade="junior"
-                style="font-family:var(--font-mono);font-size:.78rem;padding:6px 18px;
-                       border-radius:4px;border:1px solid rgba(0,229,160,0.3);
-                       background:transparent;color:var(--muted);cursor:pointer;transition:all .2s">
-          困難
-        </button>
-      </div>
-    </div>
+      <div id="difficulty-btns" style="display:flex;gap:18px">
 
-    <div style="margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:8px">
-      <svg width="64" height="64" viewBox="0 0 64 64" style="opacity:.85">
-        <circle cx="32" cy="32" r="26" stroke="rgba(0,229,160,.15)" stroke-width="4" fill="none"/>
-        <circle id="start-ring" cx="32" cy="32" r="26" stroke="#00e5a0" stroke-width="4" fill="none"
-                stroke-dasharray="163.36" stroke-dashoffset="163.36" stroke-linecap="round"
-                style="transform:rotate(-90deg);transform-origin:32px 32px;
-                       filter:drop-shadow(0 0 8px #00e5a0);transition:stroke-dashoffset .05s linear"/>
-      </svg>
-      <div id="start-status"
-           style="font-family:var(--font-mono);font-size:.72rem;color:var(--muted);letter-spacing:.2em">
-        等待手勢...
+        <div class="diff-btn" data-grade="elementary_low"
+             style="position:relative;width:80px;height:44px;display:flex;
+                    align-items:center;justify-content:center;
+                    font-family:var(--font-mono);font-size:.85rem;
+                    color:var(--muted);user-select:none;border-radius:5px;
+                    border:1px solid rgba(0,229,160,0.2);transition:color .15s">
+          <span style="position:relative;z-index:1">簡單</span>
+          <svg style="position:absolute;inset:-6px;width:92px;height:56px;
+                      pointer-events:none;overflow:visible" viewBox="0 0 92 56" fill="none">
+            <rect x="4" y="4" width="84" height="48" rx="5"
+                  stroke="rgba(0,229,160,.12)" stroke-width="3" fill="none"/>
+            <rect class="diff-ring" x="4" y="4" width="84" height="48" rx="5"
+                  stroke="#00e5a0" stroke-width="3" fill="none"
+                  data-circ="264" stroke-dasharray="264" stroke-dashoffset="264"
+                  stroke-linecap="round"
+                  style="transform:rotate(-90deg);transform-origin:46px 28px;
+                         filter:drop-shadow(0 0 6px #00e5a0);
+                         transition:stroke-dashoffset .05s linear"/>
+          </svg>
+        </div>
+
+        <div class="diff-btn" data-grade="elementary_high"
+             style="position:relative;width:80px;height:44px;display:flex;
+                    align-items:center;justify-content:center;
+                    font-family:var(--font-mono);font-size:.85rem;
+                    color:var(--muted);user-select:none;border-radius:5px;
+                    border:1px solid rgba(0,229,160,0.2);transition:color .15s">
+          <span style="position:relative;z-index:1">中等</span>
+          <svg style="position:absolute;inset:-6px;width:92px;height:56px;
+                      pointer-events:none;overflow:visible" viewBox="0 0 92 56" fill="none">
+            <rect x="4" y="4" width="84" height="48" rx="5"
+                  stroke="rgba(0,229,160,.12)" stroke-width="3" fill="none"/>
+            <rect class="diff-ring" x="4" y="4" width="84" height="48" rx="5"
+                  stroke="#00e5a0" stroke-width="3" fill="none"
+                  data-circ="264" stroke-dasharray="264" stroke-dashoffset="264"
+                  stroke-linecap="round"
+                  style="transform:rotate(-90deg);transform-origin:46px 28px;
+                         filter:drop-shadow(0 0 6px #00e5a0);
+                         transition:stroke-dashoffset .05s linear"/>
+          </svg>
+        </div>
+
+        <div class="diff-btn" data-grade="junior"
+             style="position:relative;width:80px;height:44px;display:flex;
+                    align-items:center;justify-content:center;
+                    font-family:var(--font-mono);font-size:.85rem;
+                    color:var(--muted);user-select:none;border-radius:5px;
+                    border:1px solid rgba(0,229,160,0.2);transition:color .15s">
+          <span style="position:relative;z-index:1">困難</span>
+          <svg style="position:absolute;inset:-6px;width:92px;height:56px;
+                      pointer-events:none;overflow:visible" viewBox="0 0 92 56" fill="none">
+            <rect x="4" y="4" width="84" height="48" rx="5"
+                  stroke="rgba(0,229,160,.12)" stroke-width="3" fill="none"/>
+            <rect class="diff-ring" x="4" y="4" width="84" height="48" rx="5"
+                  stroke="#00e5a0" stroke-width="3" fill="none"
+                  data-circ="264" stroke-dasharray="264" stroke-dashoffset="264"
+                  stroke-linecap="round"
+                  style="transform:rotate(-90deg);transform-origin:46px 28px;
+                         filter:drop-shadow(0 0 6px #00e5a0);
+                         transition:stroke-dashoffset .05s linear"/>
+          </svg>
+        </div>
+
       </div>
     </div>
   </div>
@@ -399,20 +429,8 @@ const $    = id => document.getElementById(id);
 const show = el => { if (el) el.style.display = ''; };
 const hide = el => { if (el) el.style.display = 'none'; };
 
-// ── 難度選擇 ─────────────────────────────────────────────
+// ── 難度選擇（由 doStart 手勢選取） ────────────────────────
 let selectedDifficulty = 'elementary_high';
-document.querySelectorAll('.diff-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    selectedDifficulty = btn.dataset.grade;
-    document.querySelectorAll('.diff-btn').forEach(b => {
-      const active = b === btn;
-      b.style.borderColor     = active ? 'var(--neon-g)' : 'rgba(0,229,160,0.3)';
-      b.style.background      = active ? 'rgba(0,229,160,0.12)' : 'transparent';
-      b.style.color           = active ? 'var(--neon-g)' : 'var(--muted)';
-      b.style.boxShadow       = active ? '0 0 8px rgba(0,229,160,0.3)' : '';
-    });
-  });
-});
 
 const showGame = () => { $('game-layer').style.visibility = 'visible'; $('game-layer').style.pointerEvents = 'auto'; };
 const hideGame = () => { $('game-layer').style.visibility = 'hidden';  $('game-layer').style.pointerEvents = 'none'; };
@@ -516,21 +534,37 @@ const Game = (() => {
     fh = requestAnimationFrame(frame);
   }
 
-  // ── 開始畫面 ───────────────────────────────────────
+  // ── 開始畫面（懸停難度按鈕 1.5 秒開始） ───────────────
   function doStart(gs) {
-    const ring = $('start-ring'), st = $('start-status'), CIRC = 163.36;
+    const diffBtns = Array.from(document.querySelectorAll('.diff-btn')).map(el => {
+      const r = el.getBoundingClientRect();
+      return { el, grade: el.dataset.grade, x1: r.left, y1: r.top, x2: r.right, y2: r.bottom };
+    });
+
+    let hit = null;
     if (gs.thumbActive) {
-      if (!startHover) startHover = performance.now();
-      const p = Math.min((performance.now() - startHover) / 1000 / HOVER_TIME, 1);
-      ring.style.strokeDashoffset = CIRC * (1 - p);
-      st.textContent = `準備中… ${Math.round(p * 100)}%`;
-      Cursor.update(gs.x, gs.y, true, p);
-      if (p >= 1) { startHover = null; beginGame(); }
-    } else {
-      startHover = null;
-      ring.style.strokeDashoffset = CIRC;
-      st.textContent = '等待手勢...';
-      Cursor.update(gs.x, gs.y, false, 0);
+      for (let i = 0; i < diffBtns.length; i++) {
+        const b = diffBtns[i];
+        if (gs.x > b.x1 && gs.x < b.x2 && gs.y > b.y1 && gs.y < b.y2) { hit = i; break; }
+      }
+    }
+
+    const aim = Aim.update(hit, gs.thumbActive);
+
+    diffBtns.forEach((b, i) => {
+      const hov  = (i === hit && gs.thumbActive);
+      const prog = hov ? Aim.getP(i) : 0;
+      b.el.style.color = hov ? 'var(--neon-g)' : 'var(--muted)';
+      const ring = b.el.querySelector('.diff-ring');
+      if (ring) ring.style.strokeDashoffset = +ring.getAttribute('data-circ') * (1 - prog);
+    });
+
+    Cursor.update(gs.x, gs.y, gs.thumbActive, 0);
+
+    if (aim.fired) {
+      selectedDifficulty = diffBtns[aim.target].grade;
+      Aim.reset();
+      beginGame();
     }
   }
 
@@ -970,8 +1004,6 @@ const Game = (() => {
     hide($('screen-final')); hide($('screen-result'));
     hideGame(); hide($('hud')); hide($('timer-bar-wrap')); hide($('hint-text'));
     show($('screen-start'));
-    $('start-ring').style.strokeDashoffset = '163.36';
-    $('start-status').textContent = '等待手勢...';
     loadSidebarLeaderboard();   // 回到首頁，重新載入側欄積分榜
     init();
   }

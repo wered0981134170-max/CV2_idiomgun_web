@@ -1,60 +1,40 @@
 """
-db.py  ── SQLite 資料層（排行榜 + 學生身分）
+db.py  ── Supabase 資料層（排行榜 + 學生身分）
 """
 
-import sqlite3
 import os
+from supabase import create_client, Client
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "leaderboard.db")
-
-
-def _conn():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.execute("PRAGMA journal_mode=WAL")
-    return conn
+_client: Client | None = None
 
 
-# ── 初始化資料表 ──────────────────────────────────────────────
+def _sb() -> Client:
+    global _client
+    if _client is None:
+        url = os.environ["SUPABASE_URL"]
+        key = os.environ["SUPABASE_KEY"]
+        _client = create_client(url, key)
+    return _client
+
+
 def init_db():
-    with _conn() as c:
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS scores (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                class_name TEXT,
-                seat_no    INTEGER,
-                name       TEXT    NOT NULL,
-                score      INTEGER NOT NULL,
-                total      INTEGER NOT NULL DEFAULT 100,
-                duration   INTEGER NOT NULL DEFAULT 0,
-                created_at DATETIME DEFAULT (datetime('now','localtime'))
-            )
-        """)
-        c.execute("CREATE INDEX IF NOT EXISTS idx_scores_score ON scores (score DESC, created_at ASC)")
-
-        # 舊資料表缺少欄位時自動補上
-        for ddl in [
-            "ALTER TABLE scores ADD COLUMN duration   INTEGER NOT NULL DEFAULT 0",
-            "ALTER TABLE scores ADD COLUMN class_name TEXT",
-            "ALTER TABLE scores ADD COLUMN seat_no    INTEGER",
-        ]:
-            try:
-                c.execute(ddl)
-            except Exception:
-                pass
-        c.commit()
+    pass  # 資料表由 Supabase 端管理，見下方 SQL 建立腳本
 
 
 # ── 排行榜 ────────────────────────────────────────────────────
 def save_score(name: str, score: int, total: int = 100, duration: int = 0,
                class_name: str = None, seat_no: int = None) -> dict:
     name = name.strip()[:20] or "匿名"
-    with _conn() as c:
-        cur = c.execute(
-            "INSERT INTO scores (class_name, seat_no, name, score, total, duration) VALUES (?, ?, ?, ?, ?, ?)",
-            (class_name, seat_no, name, score, total, duration)
-        )
-        c.commit()
-        return {"id": cur.lastrowid, "name": name, "score": score, "duration": duration}
+    res = _sb().table("scores").insert({
+        "class_name": class_name,
+        "seat_no":    seat_no,
+        "name":       name,
+        "score":      score,
+        "total":      total,
+        "duration":   duration,
+    }).execute()
+    row = res.data[0] if res.data else {}
+    return {"id": row.get("id"), "name": name, "score": score, "duration": duration}
 
 
 def _fmt(sec: int) -> str:
@@ -63,43 +43,54 @@ def _fmt(sec: int) -> str:
 
 
 def get_top(limit: int = 10) -> list[dict]:
-    with _conn() as c:
-        rows = c.execute(
-            """SELECT id, class_name, seat_no, name, score, total, duration, created_at
-               FROM scores
-               ORDER BY score DESC, created_at ASC
-               LIMIT ?""",
-            (limit,)
-        ).fetchall()
+    res = (
+        _sb().table("scores")
+        .select("id, class_name, seat_no, name, score, total, duration, created_at")
+        .order("score", desc=True)
+        .order("created_at", desc=False)
+        .limit(limit)
+        .execute()
+    )
     return [
         {
-            "rank": i + 1, "id": r[0],
-            "class_name": r[1], "seat_no": r[2], "name": r[3],
-            "score": r[4], "total": r[5],
-            "duration": r[6], "duration_fmt": _fmt(r[6]), "time": r[7],
+            "rank": i + 1,
+            "id":           r["id"],
+            "class_name":   r["class_name"],
+            "seat_no":      r["seat_no"],
+            "name":         r["name"],
+            "score":        r["score"],
+            "total":        r["total"],
+            "duration":     r["duration"],
+            "duration_fmt": _fmt(r["duration"]),
+            "time":         r["created_at"],
         }
-        for i, r in enumerate(rows)
+        for i, r in enumerate(res.data or [])
     ]
 
 
 def get_best_by_student(class_name: str, seat_no: int, name: str):
-    with _conn() as c:
-        row = c.execute(
-            """SELECT score, total, duration, created_at FROM scores
-               WHERE class_name = ? AND seat_no = ? AND name = ?
-               ORDER BY score DESC, created_at ASC LIMIT 1""",
-            (class_name, seat_no, name)
-        ).fetchone()
-    if row is None:
+    res = (
+        _sb().table("scores")
+        .select("score, total, duration, created_at")
+        .eq("class_name", class_name)
+        .eq("seat_no",    seat_no)
+        .eq("name",       name)
+        .order("score", desc=True)
+        .order("created_at", desc=False)
+        .limit(1)
+        .execute()
+    )
+    if not res.data:
         return None
+    r = res.data[0]
     return {
-        "score": row[0], "total": row[1],
-        "duration": row[2], "duration_fmt": _fmt(row[2]), "time": row[3],
+        "score":        r["score"],
+        "total":        r["total"],
+        "duration":     r["duration"],
+        "duration_fmt": _fmt(r["duration"]),
+        "time":         r["created_at"],
     }
 
 
 def reset_table():
-    with _conn() as c:
-        c.execute("DELETE FROM scores")
-        c.execute("DELETE FROM sqlite_sequence WHERE name='scores'")
-        c.commit()
+    _sb().table("scores").delete().neq("id", 0).execute()
