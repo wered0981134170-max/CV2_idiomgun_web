@@ -47,7 +47,7 @@ def _fmt(sec: int) -> str:
 def get_top(limit: int = 10) -> list[dict]:
     res = (
         _sb().table("scores")
-        .select("id, class_name, seat_no, name, score, total, duration, grade, created_at")
+        .select("id, class_name, seat_no, name, score, total, duration, created_at")
         .order("score", desc=True)
         .order("created_at", desc=False)
         .limit(limit)
@@ -64,7 +64,6 @@ def get_top(limit: int = 10) -> list[dict]:
             "total":        r["total"],
             "duration":     r["duration"],
             "duration_fmt": _fmt(r["duration"]),
-            "grade":        r.get("grade"),
             "time":         r["created_at"],
         }
         for i, r in enumerate(res.data or [])

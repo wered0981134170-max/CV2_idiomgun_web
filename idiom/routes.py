@@ -49,7 +49,10 @@ def get_all_questions():
 # ── 排行榜 ─────────────────────────────────────
 @main_bp.route("/leaderboard", methods=["GET"])
 def leaderboard_get():
-    return jsonify(get_top(5))
+    try:
+        return jsonify(get_top(5))
+    except Exception:
+        return jsonify([]), 200
 
 
 @main_bp.route("/leaderboard", methods=["POST"])
