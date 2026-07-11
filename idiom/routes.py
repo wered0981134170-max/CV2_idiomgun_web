@@ -67,6 +67,10 @@ def leaderboard_post():
         seat_no    = None
         name       = (data.get("name") or "").strip()[:20] or "匿名"
 
+    grade = data.get("grade") or None
+    if grade not in ("elementary_low", "elementary_high", "junior", None):
+        grade = None
+
     try:
         score    = max(0, min(int(data.get("score",    0)),  10000))
         total    = max(1, min(int(data.get("total",  100)),  10000))
@@ -74,7 +78,7 @@ def leaderboard_post():
     except (TypeError, ValueError):
         return jsonify({"ok": False, "error": "invalid payload"}), 400
 
-    entry = save_score(name, score, total, duration, class_name, seat_no)
+    entry = save_score(name, score, total, duration, class_name, seat_no, grade)
     return jsonify({"ok": True, "entry": entry})
 
 

@@ -384,7 +384,7 @@ const Game = (() => {
     fetch('/leaderboard', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: playerName, score, total: TOTAL_Q * 10, duration: durationSec }),
+      body: JSON.stringify({ name: playerName, score, total: TOTAL_Q * 10, duration: durationSec, grade: selectedDifficulty }),
     })
     .then(r => r.json())
     .then(saved => loadFinalLeaderboard(score, saved?.entry?.id))

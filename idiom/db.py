@@ -23,7 +23,8 @@ def init_db():
 
 # ── 排行榜 ────────────────────────────────────────────────────
 def save_score(name: str, score: int, total: int = 100, duration: int = 0,
-               class_name: str = None, seat_no: int = None) -> dict:
+               class_name: str = None, seat_no: int = None,
+               grade: str = None) -> dict:
     name = name.strip()[:20] or "匿名"
     res = _sb().table("scores").insert({
         "class_name": class_name,
@@ -32,6 +33,7 @@ def save_score(name: str, score: int, total: int = 100, duration: int = 0,
         "score":      score,
         "total":      total,
         "duration":   duration,
+        "grade":      grade,
     }).execute()
     row = res.data[0] if res.data else {}
     return {"id": row.get("id"), "name": name, "score": score, "duration": duration}
@@ -45,7 +47,7 @@ def _fmt(sec: int) -> str:
 def get_top(limit: int = 10) -> list[dict]:
     res = (
         _sb().table("scores")
-        .select("id, class_name, seat_no, name, score, total, duration, created_at")
+        .select("id, class_name, seat_no, name, score, total, duration, grade, created_at")
         .order("score", desc=True)
         .order("created_at", desc=False)
         .limit(limit)
@@ -62,6 +64,7 @@ def get_top(limit: int = 10) -> list[dict]:
             "total":        r["total"],
             "duration":     r["duration"],
             "duration_fmt": _fmt(r["duration"]),
+            "grade":        r.get("grade"),
             "time":         r["created_at"],
         }
         for i, r in enumerate(res.data or [])
