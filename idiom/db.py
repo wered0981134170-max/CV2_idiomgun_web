@@ -4,6 +4,7 @@ db.py  ── Supabase 資料層（排行榜 + 學生身分）
 
 import os
 from supabase import create_client, Client
+from supabase.lib.client_options import ClientOptions
 
 _client: Client | None = None
 
@@ -13,7 +14,8 @@ def _sb() -> Client:
     if _client is None:
         url = os.environ["SUPABASE_URL"].strip() 
         key = os.environ["SUPABASE_KEY"].strip()  
-        _client = create_client(url, key)
+        # 逾時設短一點：Supabase 連不上時，遊戲才能快速退回讀 JSON
+        _client = create_client(url, key, options=ClientOptions(postgrest_client_timeout=8))
     return _client
 
 
@@ -92,6 +94,21 @@ def get_best_by_student(class_name: str, seat_no: int, name: str):
         "duration_fmt": _fmt(r["duration"]),
         "time":         r["created_at"],
     }
+
+
+# ── 成語題庫 ──────────────────────────────────────────────────
+def get_published_idioms(grade: str) -> list[dict]:
+    """取得某年級已發布的成語，格式與 data/*.json 的單筆成語相同。
+    資料表不存在或連線失敗時會丟出例外，由呼叫端決定如何退回。"""
+    res = (
+        _sb().table("idioms")
+        .select("id, grade, idiom, meaning, explanation, questions")
+        .eq("grade", grade)
+        .eq("status", "published")
+        .order("id")
+        .execute()
+    )
+    return res.data or []
 
 
 def reset_table():
