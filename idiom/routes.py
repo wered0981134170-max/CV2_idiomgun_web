@@ -39,7 +39,8 @@ def get_all_questions():
     questions = get_questions_by_grade(grade=grade, n=n)
 
     keys = ["type", "idiom", "display", "options", "answer",
-            "correct_char", "hint", "meaning", "explanation", "difficulty"]
+            "correct_char", "hint", "meaning", "explanation", "difficulty",
+            "teaching"]
     return jsonify({
         "total": len(questions),
         "questions": [{k: q.get(k) for k in keys} for q in questions],
@@ -87,7 +88,5 @@ def leaderboard_post():
 
 @main_bp.route("/leaderboard/reset", methods=["POST"])
 def leaderboard_reset():
-    reset_table()
-    return jsonify({"ok": True})
-# 清除資料，在瀏覽器 Console 執行：
-# fetch('/leaderboard/reset', {method:'POST'}).then(r=>r.json()).then(console.log)
+    # TODO(階段 2)：教師登入完成後，改為 @teacher_required 並呼叫 reset_table()
+    return jsonify({"ok": False, "error": "forbidden"}), 403

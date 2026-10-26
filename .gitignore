@@ -62,6 +62,10 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# SQLite
+*.db
+*.db-journal
+
 # Flask stuff:
 instance/
 .webassets-cache
@@ -219,3 +223,6 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 *.onesource
+# Secrets
+secret_key.env
+*.env

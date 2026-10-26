@@ -3,6 +3,15 @@ app.py  ── Flask 主程式入口
 """
 
 import os
+
+# 只在本機開發時載入 .env；Render 會自動設定 RENDER 環境變數，不載入
+if not os.environ.get("RENDER"):
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
+
 from flask import Flask
 from .db import init_db
 
@@ -10,7 +19,10 @@ template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'te
 static_dir   = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static'))
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-change-in-production')
+_secret_key = os.environ.get('SECRET_KEY', '').strip()
+if not _secret_key:
+    raise RuntimeError("未設定環境變數 SECRET_KEY（本機請先 set / export 後再啟動）")
+app.config['SECRET_KEY'] = _secret_key
 
 from .routes import main_bp
 from .auth   import auth_bp
