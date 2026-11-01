@@ -35,6 +35,15 @@ def fake_db(monkeypatch):
     by_email = {t["email"]: t for t in teachers.values()}
     monkeypatch.setattr(db, "get_teacher_by_email", lambda e: by_email.get(e))
     monkeypatch.setattr(db, "get_teacher_by_id", lambda i: teachers.get(i))
+    created = state["created"] = []
+
+    def create_teacher(email, password_hash, name, role="teacher", school_id=None):
+        row = dict(id=100 + len(created), email=email, password_hash=password_hash, name=name,
+                   role=role, school_id=school_id, is_active=True)
+        created.append(row)
+        teachers[row["id"]] = by_email[email] = row
+        return row
+    monkeypatch.setattr(db, "create_teacher", create_teacher)
     monkeypatch.setattr(db, "get_school", lambda i: {"id": i, "name": "測試國小"})
     monkeypatch.setattr(db, "record_login_attempt",
                         lambda e, ip, ok: state["attempts"].append((e, ip, ok)))
@@ -164,3 +173,59 @@ def test_teacher_pages_not_cached(client):
 def test_session_cookie_flags():
     assert app.config["SESSION_COOKIE_SAMESITE"] == "Lax"
     assert app.config["SESSION_COOKIE_HTTPONLY"] is True
+
+
+# ── 註冊（白名單）─────────────────────────────────────────────
+def _register(client, email="me@x.tw", name="我", pw="long-enough-pw-1", pw2=None):
+    return client.post("/teacher/register", data={
+        "email": email, "name": name, "password": pw,
+        "password2": pw if pw2 is None else pw2, "csrf_token": _csrf(client, "/teacher/register")})
+
+
+@pytest.fixture
+def reg_open(monkeypatch):
+    monkeypatch.setenv("REGISTER_ALLOWED_EMAILS", "me@x.tw, other@x.tw")
+
+
+def test_register_closed_when_no_whitelist(client, monkeypatch):
+    monkeypatch.delenv("REGISTER_ALLOWED_EMAILS", raising=False)
+    assert client.get("/teacher/register").status_code == 404
+    assert "註冊" not in client.get("/teacher/login").get_data(as_text=True)
+
+
+def test_register_whitelisted_email_creates_admin_who_can_login(client, fake_db, reg_open):
+    r = _register(client)
+    assert r.status_code == 200 and "註冊完成" in r.get_data(as_text=True)
+    assert fake_db["created"][0]["role"] == "admin"
+    assert fake_db["created"][0]["password_hash"] != "long-enough-pw-1"
+    assert _login(client, "me@x.tw", "long-enough-pw-1").status_code == 302
+
+
+def test_register_rejects_email_not_in_whitelist(client, fake_db, reg_open):
+    assert _register(client, email="stranger@x.tw").status_code == 403
+    assert fake_db["created"] == []
+
+
+def test_register_validation(client, fake_db, reg_open):
+    assert _register(client, pw="short").status_code == 400
+    assert _register(client, pw2="different-pw-123").status_code == 400
+    assert _register(client, name="  ").status_code == 400
+    assert _register(client, pw="a" * 80).status_code == 400
+    assert fake_db["created"] == []
+
+
+def test_register_duplicate_email(client, reg_open):
+    _register(client)
+    assert _register(client).status_code == 409
+
+
+def test_register_requires_csrf(client, reg_open):
+    r = client.post("/teacher/register", data={
+        "email": "me@x.tw", "name": "我", "password": "long-enough-pw-1", "password2": "long-enough-pw-1"})
+    assert r.status_code == 400
+
+
+def test_register_is_rate_limited(client, reg_open):
+    for _ in range(teacher_auth.MAX_FAIL_PER_EMAIL):
+        _register(client, pw="short")
+    assert _register(client).status_code == 429
