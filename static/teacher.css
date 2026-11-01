@@ -1,0 +1,33 @@
+/* 教師端：淺色版面，沿用學生端的主色（綠 / 藍 / 紅），調深以符合可讀性 */
+:root {
+  --bg:      #f4f7fa;
+  --card:    #ffffff;
+  --text:    #1b2733;
+  --muted:   #5a7090;
+  --border:  #d6dee8;
+  --accent:  #00a37a;
+  --accent-2:#0088b3;
+  --danger:  #d6304f;
+  --radius:  6px;
+  --font-main: 'Noto Serif TC', 'Microsoft JhengHei', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-main); line-height: 1.6; }
+.topbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 24px;
+          background: var(--card); border-bottom: 1px solid var(--border); }
+.brand { font-weight: 700; color: var(--accent); text-decoration: none; }
+.userbox { display: flex; gap: 12px; align-items: center; margin: 0; }
+.container { max-width: 960px; margin: 32px auto; padding: 0 16px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+.card-narrow { max-width: 380px; margin: 48px auto; }
+h1 { margin: 0 0 16px; font-size: 1.4rem; }
+label { display: block; margin-bottom: 14px; font-size: .95rem; }
+input { display: block; width: 100%; margin-top: 4px; padding: 8px 10px; font: inherit;
+        border: 1px solid var(--border); border-radius: var(--radius); }
+input:focus { outline: 2px solid var(--accent-2); outline-offset: 1px; }
+.btn { padding: 8px 18px; font: inherit; color: #fff; background: var(--accent); border: 0;
+       border-radius: var(--radius); cursor: pointer; }
+.btn:hover { filter: brightness(.92); }
+.btn-ghost { color: var(--muted); background: transparent; border: 1px solid var(--border); }
+.alert { padding: 8px 12px; color: var(--danger); background: #fdecef; border-radius: var(--radius); }
+.hint { color: var(--muted); font-size: .9rem; }

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}教師端{% endblock %}｜成語射擊</title>
+<link rel="stylesheet" href="/static/teacher.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="{{ url_for('teacher.dashboard') }}">成語射擊 · 教師端</a>
+  {% if current_user.is_authenticated %}
+  <form method="post" action="{{ url_for('teacher.logout') }}" class="userbox">
+    <span>{{ current_user.name }}{% if current_user.is_admin %}（管理員）{% endif %}</span>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-ghost">登出</button>
+  </form>
+  {% endif %}
+</header>
+<main class="container">{% block content %}{% endblock %}</main>
+</body>
+</html>

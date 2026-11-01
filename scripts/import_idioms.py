@@ -46,6 +46,7 @@ def build_rows(source: str):
             for msg in validate_questions(idiom, questions):
                 report.append((grade, idiom, msg))
             rows.append({
+                "school_id": None,                    # 共用題庫
                 "grade": grade,                       # 以檔案對應為準
                 "idiom": idiom,
                 "meaning": item.get("meaning", ""),
@@ -94,7 +95,7 @@ def main():
     from idiom.db import _sb
     res = (
         _sb().table("idioms")
-        .upsert(rows, on_conflict="grade,idiom", ignore_duplicates=not args.overwrite)
+        .upsert(rows, on_conflict="school_id,grade,idiom", ignore_duplicates=not args.overwrite)
         .execute()
     )
     written = len(res.data or [])

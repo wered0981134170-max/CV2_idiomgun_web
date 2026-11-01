@@ -13,6 +13,7 @@ from flask import Blueprint, render_template, jsonify, request, session
 from .question_type import get_questions_by_grade
 from .db import save_score, get_top, reset_table
 from .config import Config
+from .teacher_auth import admin_required
 
 main_bp = Blueprint('main', __name__)
 
@@ -87,6 +88,7 @@ def leaderboard_post():
 
 
 @main_bp.route("/leaderboard/reset", methods=["POST"])
+@admin_required
 def leaderboard_reset():
-    # TODO(階段 2)：教師登入完成後，改為 @teacher_required 並呼叫 reset_table()
-    return jsonify({"ok": False, "error": "forbidden"}), 403
+    reset_table()
+    return jsonify({"ok": True})

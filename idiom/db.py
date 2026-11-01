@@ -105,10 +105,68 @@ def get_published_idioms(grade: str) -> list[dict]:
         .select("id, grade, idiom, meaning, explanation, questions")
         .eq("grade", grade)
         .eq("status", "published")
+        .is_("school_id", "null")     # 目前只出共用題庫；校內成語在階段 2c 加入
         .order("id")
         .execute()
     )
     return res.data or []
+
+
+# ── 教師帳號 ──────────────────────────────────────────────────
+_TEACHER_COLS = "id, email, password_hash, name, role, school_id, is_active"
+
+
+def get_teacher_by_email(email: str):
+    res = (_sb().table("teachers").select(_TEACHER_COLS)
+           .eq("email", (email or "").strip().lower()).limit(1).execute())
+    return res.data[0] if res.data else None
+
+
+def get_teacher_by_id(teacher_id: int):
+    res = (_sb().table("teachers").select(_TEACHER_COLS)
+           .eq("id", teacher_id).limit(1).execute())
+    return res.data[0] if res.data else None
+
+
+def get_school(school_id: int):
+    res = (_sb().table("schools").select("id, name")
+           .eq("id", school_id).limit(1).execute())
+    return res.data[0] if res.data else None
+
+
+def count_admins() -> int:
+    res = (_sb().table("teachers").select("id", count="exact")
+           .eq("role", "admin").limit(1).execute())
+    return res.count or 0
+
+
+def create_teacher(email: str, password_hash: str, name: str,
+                   role: str = "teacher", school_id: int = None) -> dict:
+    res = _sb().table("teachers").insert({
+        "email": email.strip().lower(), "password_hash": password_hash,
+        "name": name.strip(), "role": role, "school_id": school_id,
+    }).execute()
+    return res.data[0]
+
+
+# ── 登入失敗限制 ──────────────────────────────────────────────
+def count_login_failures(email: str, ip: str, since_iso: str) -> tuple[int, int]:
+    """回傳 (此 email 的失敗次數, 此 IP 的失敗次數)；只算 since_iso 之後。"""
+    t = _sb().table("login_attempts")
+    by_email = (t.select("id", count="exact").eq("email", email).eq("success", False)
+                .gte("created_at", since_iso).limit(1).execute()).count or 0
+    by_ip = (_sb().table("login_attempts").select("id", count="exact").eq("ip", ip)
+             .eq("success", False).gte("created_at", since_iso).limit(1).execute()).count or 0
+    return by_email, by_ip
+
+
+def record_login_attempt(email: str, ip: str, success: bool) -> None:
+    _sb().table("login_attempts").insert(
+        {"email": email, "ip": ip, "success": success}).execute()
+
+
+def purge_old_login_attempts(before_iso: str) -> None:
+    _sb().table("login_attempts").delete().lt("created_at", before_iso).execute()
 
 
 def reset_table():

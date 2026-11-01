@@ -1,0 +1,11 @@
+{% extends "teacher/base.html" %}
+{% block title %}首頁{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>歡迎，{{ current_user.name }}</h1>
+  <p class="hint">
+    {% if school %}學校：{{ school.name }}{% elif current_user.is_admin %}管理員（不屬於特定學校）{% endif %}
+  </p>
+  <p>班級、成績與成語管理功能將在後續階段加入。</p>
+</section>
+{% endblock %}

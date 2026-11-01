@@ -13,7 +13,8 @@
 - [ ] 階段 0：無
 - [ ] 階段 1：`sql/001_stage1_idioms.sql`（建 `idioms`、對 `idioms` 與 `scores` 開 RLS）
   - ⚠️ 順序：**必須先把 Render 的 `SUPABASE_KEY` 換成 service_role key，再對 `scores` 開 RLS**，否則排行榜（目前用 anon key）會全部失效
-- [ ] 階段 2：`teachers` 表、RLS（SQL 待補）
+- [ ] 階段 2a：`sql/002_stage2a_auth.sql`（schools、teachers、login_attempts，`idioms` 加 `school_id`；需 PostgreSQL 15+）
+  - ⚠️ 必須在部署程式**之前**執行：新版 `get_published_idioms` 會查 `school_id`，欄位不存在時遊戲會退回讀 JSON
 - [ ] 階段 3：`scores` 表 RLS／必要欄位檢查（SQL 待補）
 - [ ] 階段 3.5：`answers` 表、RLS（SQL 待補）
 
@@ -33,7 +34,8 @@
 - [ ] 檢查匯入報告（驗證不符合規則的成語）
 
 ## 4. 建立教師帳號
-- [ ] 對正式資料庫執行 `scripts/create_teacher.py`（階段 2 完成後補上用法）
+- [ ] 對正式資料庫執行 `python -m scripts.create_admin` 建立第一個 admin（會顯示目標主機；密碼用輸入的）
+- [ ] 其餘教師帳號、學校、班級由 admin 在網頁上建立（階段 2b 之後）
 
 ## 5. 部署
 - [ ] 合併 `feature/teacher` → `master`、push、Render 部署
@@ -42,7 +44,9 @@
 ## 6. 部署後測試
 - [ ] 學生遊戲首頁、登入、三種難度出題正常
 - [ ] 排行榜讀寫正常
-- [ ] `POST /leaderboard/reset` 未登入時回 403/401
+- [ ] `POST /leaderboard/reset` 未登入回 401、一般教師回 403
+- [ ] `/teacher/login` 登入成功、連續輸錯 5 次會被鎖 15 分鐘
+- [ ] 瀏覽器 Cookie 的 session 有 Secure、HttpOnly、SameSite=Lax
 - [ ] 教師登入、成績查看（僅限負責班級）
 - [ ] 成語管理、發布後遊戲可見
 

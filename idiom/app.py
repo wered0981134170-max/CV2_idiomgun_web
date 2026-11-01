@@ -24,10 +24,31 @@ if not _secret_key:
     raise RuntimeError("未設定環境變數 SECRET_KEY（本機請先 set / export 後再啟動）")
 app.config['SECRET_KEY'] = _secret_key
 
+_debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    # 正式環境一律 Secure；本機 http 開發預設關閉（FLASK_DEBUG=true），
+    # 也可用 SESSION_COOKIE_SECURE=true/false 明確指定
+    SESSION_COOKIE_SECURE=os.environ.get(
+        "SESSION_COOKIE_SECURE", "false" if _debug else "true").lower() == "true",
+)
+
+if os.environ.get("RENDER"):
+    # Render 在反向代理後面：信任一層 X-Forwarded-*，request.remote_addr 才是真實 IP
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+
+from .extensions import login_manager, bcrypt
+login_manager.init_app(app)
+bcrypt.init_app(app)
+
 from .routes import main_bp
 from .auth   import auth_bp
+from .teacher import teacher_bp
 app.register_blueprint(main_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(teacher_bp)
 
 init_db()
 
