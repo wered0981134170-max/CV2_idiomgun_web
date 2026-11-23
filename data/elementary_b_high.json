@@ -8,7 +8,7 @@
       "typo": {
         "question": "雪上加_",
         "answer": "霜",
-        "options": ["雪", "冰", "水"]
+        "options": ["相", "冰", "水"]
       },
       "compose": {
         "question": "比喻苦上加苦",

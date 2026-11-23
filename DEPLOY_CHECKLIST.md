@@ -34,8 +34,15 @@
 - [ ] 檢查匯入報告（驗證不符合規則的成語）
 
 ## 4. 建立教師帳號
-- [ ] 對正式資料庫執行 `python -m scripts.create_admin` 建立第一個 admin（會顯示目標主機；密碼用輸入的）
-- [ ] 其餘教師帳號、學校、班級由 admin 在網頁上建立（階段 2b 之後）
+- [ ] 對正式資料庫執行 `python -m scripts.create_admin` 建立教師帳號（會顯示目標主機；密碼用輸入的）
+- [ ] 系統不開放網頁註冊，`teachers` 表就是白名單；要再加帳號同樣用 `create_admin --force`
+- [ ] Render 環境變數若還有 `REGISTER_ALLOWED_EMAILS`，刪除（已不再使用）
+- [ ] 教師入口：遊戲首頁「確認身分」視窗底部的「教師登入」小連結，或直接開 `/teacher/login`
+
+## 4.1 班級名稱遷移
+- [ ] 先 `python -m scripts.normalize_class_names` 預覽：每種舊班級文字會轉成什麼、影響幾筆、哪些無法辨識
+- [ ] 確認無誤後 `python -m scripts.normalize_class_names --apply`（會顯示目標主機並要求輸入 yes）
+- [ ] 無法辨識的紀錄不會被更新或刪除，會出現在教師成績頁最下方的「未分類」
 
 ## 5. 部署
 - [ ] 合併 `feature/teacher` → `master`、push、Render 部署

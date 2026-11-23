@@ -1,5 +1,5 @@
 """
-create_admin.py  ── 用 CLI 建立「第一個」admin 帳號（其餘帳號之後在網頁上建立）
+create_admin.py  ── 用 CLI 建立教師（admin）帳號；系統不開放網頁註冊，這是唯一的建立方式
 
 用法（在專案根目錄）：
   python -m scripts.create_admin
@@ -41,7 +41,7 @@ def main():
     from idiom import db
 
     if db.count_admins() > 0 and not args.force:
-        sys.exit("已經有 admin 帳號了。其餘帳號請在網頁上建立（或加 --force）。")
+        sys.exit("已經有 admin 帳號了。確定要再建立一個請加 --force。")
 
     email = input("Email：").strip().lower()
     if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):

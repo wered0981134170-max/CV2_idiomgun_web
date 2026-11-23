@@ -3,12 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}教師端{% endblock %}｜成語射擊</title>
+<title>{% block title %}教師端{% endblock %}｜隔空進化玩成語</title>
 <link rel="stylesheet" href="/static/teacher.css">
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="{{ url_for('teacher.dashboard') }}">成語射擊 · 教師端</a>
+  <div class="topbar-left">
+    <a class="brand" href="{{ url_for('teacher.dashboard') }}">隔空進化玩成語 · 教師端</a>
+    {% if current_user.is_authenticated %}
+    <nav class="nav">
+      {% for endpoint, label in [("teacher.dashboard", "學生成績"), ("teacher.idioms", "新增成語")] %}
+      <a href="{{ url_for(endpoint) }}"{% if request.endpoint == endpoint %} class="active" aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+    {% endif %}
+  </div>
   {% if current_user.is_authenticated %}
   <form method="post" action="{{ url_for('teacher.logout') }}" class="userbox">
     <span>{{ current_user.name }}{% if current_user.is_admin %}（管理員）{% endif %}</span>
@@ -17,6 +26,7 @@
   </form>
   {% endif %}
 </header>
-<main class="container">{% block content %}{% endblock %}</main>
+<main class="{% block main_class %}container{% endblock %}">{% block content %}{% endblock %}</main>
+{% block scripts %}{% endblock %}
 </body>
 </html>

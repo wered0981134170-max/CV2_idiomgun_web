@@ -96,6 +96,34 @@ def get_best_by_student(class_name: str, seat_no: int, name: str):
     }
 
 
+SCORES_PAGE_SIZE = 1000
+
+
+def get_all_scores() -> list[dict]:
+    """讀取 scores 全部紀錄（原始班級文字，未轉換）。
+    Supabase 單次查詢有筆數上限，用 .range() 分批讀到沒有資料為止；
+    以實際拿到的筆數往後推進，即使伺服器上限比 SCORES_PAGE_SIZE 小也不會漏讀。"""
+    rows, start = [], 0
+    while True:
+        res = (
+            _sb().table("scores")
+            .select("id, class_name, seat_no, name, score, total, duration, grade, created_at")
+            .order("id")
+            .range(start, start + SCORES_PAGE_SIZE - 1)
+            .execute()
+        )
+        batch = res.data or []
+        if not batch:
+            return rows
+        rows.extend(batch)
+        start += len(batch)
+
+
+def rename_class_name(old: str, new: str) -> None:
+    """把班級文字完全等於 old 的紀錄改成 new（給 scripts/normalize_class_names.py 用）。"""
+    _sb().table("scores").update({"class_name": new}).eq("class_name", old).execute()
+
+
 # ── 成語題庫 ──────────────────────────────────────────────────
 def get_published_idioms(grade: str) -> list[dict]:
     """取得某年級已發布的成語，格式與 data/*.json 的單筆成語相同。

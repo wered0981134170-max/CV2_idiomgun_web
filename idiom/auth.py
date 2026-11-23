@@ -9,6 +9,7 @@ auth.py  ── 學生身分識別（班級 + 座號 + 姓名，無密碼）
 
 from flask import Blueprint, request, jsonify, session
 from .db import get_best_by_student
+from .class_name import normalize_class_name
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -18,6 +19,9 @@ def _validate(class_name, seat_no, name):
     name       = (name       or "").strip()[:10]
     if not class_name:
         return None, None, None, "請填寫班級"
+    class_name = normalize_class_name(class_name)
+    if not class_name:
+        return None, None, None, "班級格式無法辨識，請填寫如：三年二班、3甲"
     try:
         seat_no = int(seat_no)
         if not (1 <= seat_no <= 99):
@@ -57,6 +61,9 @@ def me():
     student = session.get("student")
     if not student:
         return jsonify({"logged_in": False})
+    # 舊 session 可能還是轉換前的班級文字；無法辨識時保留原文字
+    student = {**student,
+               "class_name": normalize_class_name(student["class_name"]) or student["class_name"]}
     best = get_best_by_student(
         student["class_name"], student["seat_no"], student["name"]
     )

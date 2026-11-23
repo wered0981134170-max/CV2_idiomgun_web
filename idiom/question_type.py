@@ -77,6 +77,13 @@ def _get_idioms(grade: str) -> List[Dict]:
     return rows
 
 
+def get_idioms(grade: str) -> List[Dict]:
+    """某年級的成語清單（與遊戲出題同一份來源：Supabase 已發布，讀不到時退回 JSON）。"""
+    if grade not in FILES:
+        raise ValueError(f"未知的年級: {grade}")
+    return _get_idioms(grade)
+
+
 def get_questions_by_grade(grade: str = "elementary_low", n: int = 5) -> List[Dict]:
     """
     從指定年級抽取 n 個成語，每個成語依序出 typo → compose → application 共三題。

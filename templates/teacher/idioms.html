@@ -1,0 +1,57 @@
+{% extends "teacher/base.html" %}
+{% block title %}成語{% endblock %}
+{% block main_class %}container container-wide{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>成語</h1>
+  <button type="button" id="add-btn" class="btn">輸入成語</button>
+</div>
+
+<section id="add-form" class="card add-form" hidden>
+  <label>新成語
+    <input type="text" id="add-input" maxlength="12" autocomplete="off">
+  </label>
+</section>
+
+<div class="bank">
+  {% for col in bank.columns %}
+  <section class="card bank-col">
+    <h2>{{ col.label }} <span class="hint" data-count="{{ col.grade }}">{{ col.idioms|length }} 個</span></h2>
+    <ul class="idiom-list" data-grade="{{ col.grade }}">
+      {% for name in col.idioms %}
+      <li><button type="button" class="idiom-item" data-grade="{{ col.grade }}" data-idiom="{{ name }}">{{ name }}</button></li>
+      {% endfor %}
+    </ul>
+    {% if not col.idioms %}<p class="hint empty-col">還沒有成語</p>{% endif %}
+  </section>
+  {% endfor %}
+</div>
+
+<aside id="drawer" class="drawer" hidden aria-labelledby="drawer-title">
+  <header class="drawer-head">
+    <div>
+      <h2 id="drawer-title"></h2>
+      <span id="drawer-grade" class="tag"></span>
+    </div>
+    <button type="button" id="drawer-close" class="btn btn-ghost" aria-label="關閉">✕</button>
+  </header>
+  <div class="drawer-body">
+    <section class="drawer-part">
+      <h3>學習內容</h3>
+      <dl id="learning" class="fields"></dl>
+    </section>
+    <section class="drawer-part">
+      <h3>遊戲題目</h3>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="typo">錯字</button>
+        <button type="button" role="tab" data-tab="compose">組成語</button>
+        <button type="button" role="tab" data-tab="application">應用</button>
+      </div>
+      <dl id="question" class="fields" role="tabpanel"></dl>
+    </section>
+  </div>
+</aside>
+
+<script id="idiom-data" type="application/json">{{ bank|tojson }}</script>
+{% endblock %}
+{% block scripts %}<script src="/static/teacher_idioms.js"></script>{% endblock %}

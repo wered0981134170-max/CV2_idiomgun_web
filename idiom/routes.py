@@ -13,6 +13,7 @@ from flask import Blueprint, render_template, jsonify, request, session
 from .question_type import get_questions_by_grade
 from .db import save_score, get_top, reset_table
 from .config import Config
+from .class_name import normalize_class_name
 from .teacher_auth import admin_required
 
 main_bp = Blueprint('main', __name__)
@@ -64,7 +65,7 @@ def leaderboard_post():
 
     # 已識別學生：從 session 取班級、座號、姓名
     if student:
-        class_name = student["class_name"]
+        class_name = normalize_class_name(student["class_name"]) or student["class_name"]
         seat_no    = student["seat_no"]
         name       = student["name"]
     else:

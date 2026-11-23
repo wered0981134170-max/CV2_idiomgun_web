@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>成語射擊 | 手勢闖關</title>
+<title>隔空進化玩成語</title>
 <link rel="stylesheet" href="/static/style.css">
 
 <script type="module" src="/static/mediapipe.js"></script>
@@ -23,7 +23,7 @@
   載入中...
 </div>
 
-<!-- 音量控制面板 -->
+<!--音量控制面板-->
 <div id="vol-panel"
      style="position:fixed;bottom:24px;right:20px;z-index:200;
             background:rgba(8,16,28,0.90);border:1px solid rgba(0,229,160,0.2);
@@ -79,29 +79,16 @@
   </svg>
 </div>
 
-<!-- 開始畫面 -->
 <div id="screen-start">
   <div class="panel">
-    <div class="game-title">成語闖關</div>
+    <div class="game-title">隔空進化玩成語</div>
     <div class="game-subtitle">IDIOM SHOOTER · GESTURE CONTROL</div>
     <div class="start-hint">伸出食指 · 懸停難度 1.5 秒 · 開始遊戲</div>
 
     <!-- 玩家名稱輸入 / 登入系統預留區塊 -->
-    <!--
-      ════════════════════════════════════════════════════════
-      ★ 登入系統預留說明：
-        目前顯示「訪客名稱輸入」。
-        未來實作登入後，此區塊替換為兩個子狀態：
-          (A) 未登入：顯示 [登入] / [註冊] 按鈕
-          (B) 已登入：顯示「Hi, {username}」+ [登出] 按鈕，
-                      隱藏 player-name 輸入框（改用帳號名）
-        JS 端：在 beginGame() 送分時帶入 user_id，
-               後端 /leaderboard POST 可辨識帳號。
-      ════════════════════════════════════════════════════════
-    -->
     <div id="auth-area" style="margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:10px">
 
-      <!-- ── (A) 訪客模式（登入前顯示） ─────────────── -->
+      <!--訪客模式-->
       <div id="guest-area" style="display:flex;flex-direction:column;align-items:center;gap:6px">
         <label for="player-name"
                style="font-family:var(--font-mono);font-size:.72rem;color:var(--muted);letter-spacing:.15em">
@@ -121,7 +108,7 @@
                        transition:all .2s;margin-top:4px">確認身分</button>
       </div>
 
-      <!-- ── (B) 已確認身分（確認後顯示，預設隱藏） ──── -->
+      <!--已確認身分-->
       <div id="logged-in-area" style="display:none;flex-direction:column;align-items:center;gap:6px">
         <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--neon-g)">
           👤 <span id="logged-in-name"></span>
@@ -142,7 +129,7 @@
       <span class="meta-tag">混合題型</span>
     </div>
 
-    <!-- 難度選擇（食指懸停 1.5 秒開始） -->
+    <!--難度選擇-->
     <div style="margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:12px">
       <div style="font-family:var(--font-mono);font-size:.68rem;color:var(--muted);letter-spacing:.15em">選擇難度</div>
       <div id="difficulty-btns" style="display:flex;gap:18px">
@@ -213,30 +200,30 @@
   </div>
 </div>
 
-<!-- 遊戲題目層 -->
+<!--遊戲題目層-->
 <div id="game-layer" style="visibility:hidden;pointer-events:none">
   <div id="char-row"></div>
   <div id="idiom-template"></div>
   <div id="corners"></div>
 </div>
 
-<!-- 組字遊戲層 -->
+<!--組字遊戲層-->
 <div id="compose-layer"
      style="visibility:hidden;pointer-events:none;
             position:fixed;inset:0;display:flex;flex-direction:column;
             align-items:center;justify-content:center;gap:28px;z-index:10">
 
-  <!-- 成語意思提示 -->
+  <!--成語意思提示-->
   <div id="compose-hint"
        style="font-family:var(--font-main);font-size:clamp(1.1rem,2.2vw,1.6rem);
               color:var(--neon-b);text-align:center;letter-spacing:.08em;
               text-shadow:0 0 12px rgba(0,200,255,.6);
               max-width:55vw;line-height:1.5"></div>
 
-  <!-- 四個目標格子 -->
+  <!--四個目標格子-->
   <div id="compose-slots" style="display:flex;gap:14px"></div>
 
-  <!-- 完成按鈕（四格填滿才顯示） -->
+  <!--完成按鈕 -->
   <div id="compose-done-wrap" style="visibility:hidden">
     <div id="compose-done"
          style="position:relative;width:140px;height:48px;display:flex;
@@ -260,13 +247,13 @@
     </div>
   </div>
 
-  <!-- 字池 -->
+  <!--字池-->
   <div id="compose-pool"
        style="display:flex;gap:12px;flex-wrap:wrap;
               max-width:56vw;justify-content:center"></div>
 </div>
 
-<!-- 拖動中的字（跟隨游標） -->
+<!--拖動中的字-->
 <div id="compose-drag"
      style="display:none;position:fixed;pointer-events:none;z-index:999;
             width:64px;height:64px;align-items:center;justify-content:center;
@@ -276,33 +263,54 @@
             border:2px solid var(--neon-g);border-radius:8px;
             transform:translate(-50%,-50%)"></div>
 
-<!-- 單題結果 -->
+<!--單題結果-->
 <div id="screen-result" style="display:none">
   <div class="result-card" id="result-card">
     <div class="result-status" id="result-status"></div>
     <div class="result-detail" id="result-detail"></div>
     <div class="result-idiom"  id="result-idiom"></div>
 
-    <!-- 解析區塊（答錯/超時才顯示） -->
+    <!--解析區塊（答錯/超時才顯示，無 teaching 資料時的備援版） -->
     <div id="result-explanation" style="display:none">
       <div class="explanation-label">📖 成語解析</div>
       <div class="explanation-text" id="explanation-text"></div>
     </div>
 
+    <!-- 學習卡（答錯/超時，有 teaching 資料時顯示） -->
+    <div id="result-learn" style="display:none">
+      <!-- 一般教學卡（compose 答錯） -->
+      <div id="learn-general">
+        <div class="learn-idiom"     id="learn-idiom"></div>
+        <div class="learn-meaning"   id="learn-meaning"></div>
+        <div class="learn-breakdown" id="learn-breakdown"></div>
+        <div class="learn-example"   id="learn-example"   style="display:none"></div>
+      </div>
+      <!-- 錯字辨識教學卡（typo 答錯，字卡＋錯字辨析） -->
+      <div id="learn-typo" style="display:none">
+        <div class="learn-typo-chars" id="learn-typo-chars"></div>
+        <div class="note-list" id="learn-typo-note" style="display:none"></div>
+      </div>
+      <!-- 應用題教學卡（application 答錯，例句＋選項辨析） -->
+      <div id="learn-application" style="display:none">
+        <div class="learn-app-example" id="learn-app-example" style="display:none"></div>
+        <div class="note-list" id="learn-app-list" style="display:none"></div>
+      </div>
+    </div>
+
     <div id="result-next-hint">
       <div class="result-next" id="result-next" style="display:none">▶ 伸出食指 5 秒繼續</div>
-      <div style="display:none;margin-top:14px;justify-content:center" id="result-ring-wrap">
-        <svg width="48" height="48" viewBox="0 0 48 48">
-          <circle cx="24" cy="24" r="18" stroke="rgba(255,255,255,.1)" stroke-width="3" fill="none"/>
-          <circle id="result-ring" cx="24" cy="24" r="18" stroke="#00e5a0" stroke-width="3" fill="none"
-                  stroke-dasharray="113.1" stroke-dashoffset="113.1" stroke-linecap="round"
-                  style="transform:rotate(-90deg);transform-origin:24px 24px;
+      <div style="display:none;margin-top:28px;justify-content:center" id="result-ring-wrap">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle cx="48" cy="48" r="36" stroke="rgba(255,255,255,.1)" stroke-width="6" fill="none"/>
+          <circle id="result-ring" cx="48" cy="48" r="36" stroke="#00e5a0" stroke-width="6" fill="none"
+                  stroke-dasharray="226.19" stroke-dashoffset="226.19" stroke-linecap="round"
+                  style="transform:rotate(-90deg);transform-origin:48px 48px;
                          filter:drop-shadow(0 0 6px #00e5a0);transition:stroke-dashoffset .05s linear"/>
         </svg>
       </div>
       <div id="result-auto-hint"
-           style="display:none;font-family:var(--font-mono);font-size:.8rem;
-                  color:var(--neon-b);letter-spacing:.15em;margin-top:10px">
+           style="display:none;font-family:var(--font-mono);font-size:1.6rem;
+                  color:var(--neon-b);letter-spacing:.15em;margin-top:20px">
         2 秒後自動繼續...
       </div>
     </div>
@@ -335,7 +343,7 @@
 
 <!-- 積分榜側欄（首頁右上角，遊戲中隱藏） -->
 <div id="lb-sidebar"
-     style="position:fixed;top:48px;right:20px;z-index:15;
+     style="position:fixed;top:48px;left:20px;z-index:15;
             width:220px;display:none">
   <div style="background:rgba(8,16,28,0.88);border:1px solid rgba(0,200,255,0.2);
               border-radius:6px;padding:12px 16px;backdrop-filter:blur(8px)">
@@ -351,6 +359,47 @@
   </div>
 </div>
 
+<!-- 學習顧問室入口（首頁右上角，準心懸停 1.5 秒進入） -->
+<div id="advisor-entry" class="diff-btn" data-grade="advisor"
+     style="position:fixed;top:48px;right:20px;z-index:15;width:220px;height:64px;
+            display:none;flex-direction:row;align-items:center;justify-content:center;
+            gap:10px;font-family:var(--font-mono);font-size:.85rem;color:var(--muted);
+            user-select:none;border-radius:6px;background:rgba(8,16,28,0.88);
+            border:1px solid rgba(0,200,255,0.2);backdrop-filter:blur(8px);
+            transition:color .15s">
+  <span style="position:relative;z-index:1;font-size:1.5rem">🎓</span>
+  <span style="position:relative;z-index:1">學習顧問室</span>
+  <svg style="position:absolute;inset:-6px;width:232px;height:76px;
+              pointer-events:none;overflow:visible" viewBox="0 0 232 76" fill="none">
+    <rect x="4" y="4" width="224" height="68" rx="6"
+          stroke="rgba(0,229,160,.12)" stroke-width="3" fill="none"/>
+    <rect class="diff-ring" x="4" y="4" width="224" height="68" rx="6"
+          stroke="#00e5a0" stroke-width="3" fill="none"
+          data-circ="584" stroke-dasharray="584" stroke-dashoffset="584"
+          stroke-linecap="round"
+          style="filter:drop-shadow(0 0 6px #00e5a0);transition:stroke-dashoffset .05s linear"/>
+  </svg>
+</div>
+
+<!-- 學習顧問室畫面（內容由 static/advisor.js 渲染） -->
+<div id="screen-advisor" style="display:none">
+  <div class="adv-top">
+    <div class="adv-title">🎓 學習顧問室</div>
+    <button class="adv-btn adv-hit" data-act="back">← 返回</button>
+  </div>
+  <div class="adv-body">
+    <aside id="adv-side"></aside>
+    <main class="adv-main">
+      <div class="adv-tools">
+        <input id="adv-search" class="adv-search" type="text" placeholder="🔍 搜尋成語…" autocomplete="off">
+        <div id="adv-chips" class="adv-chips"></div>
+      </div>
+      <div id="adv-banner" class="adv-banner"></div>
+      <div id="adv-list" class="adv-list"></div>
+    </main>
+  </div>
+</div>
+
 <!-- 確認身分 Modal -->
 <div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:500;
      align-items:center;justify-content:center;
@@ -361,7 +410,7 @@
       確認身分
     </div>
     <input id="auth-class" class="auth-input" type="text"
-           placeholder="班級（例：三年二班）" maxlength="20">
+           placeholder="班級（例：三年二班、3甲）" maxlength="20">
     <input id="auth-seat"  class="auth-input" type="number"
            placeholder="座號（1–99）" min="1" max="99">
     <input id="auth-name"  class="auth-input" type="text"
@@ -369,6 +418,7 @@
     <div id="auth-error" class="auth-error"></div>
     <button id="auth-submit" class="auth-btn-submit">確認</button>
     <button id="auth-close"  class="auth-btn-close">取消</button>
+    <a href="/teacher/login" class="auth-teacher-link">教師登入</a>
   </div>
 </div>
 
@@ -379,6 +429,7 @@
 <script src="/static/cursor.js"></script>
 <script src="/static/aim.js"></script>
 <script src="/static/timer.js"></script>
+<script src="/static/advisor.js"></script>
 <script src="/static/game.js"></script>
 <script src="/static/volume.js"></script>
 </body>

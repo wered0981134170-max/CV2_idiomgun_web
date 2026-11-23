@@ -35,16 +35,8 @@ def fake_db(monkeypatch):
     by_email = {t["email"]: t for t in teachers.values()}
     monkeypatch.setattr(db, "get_teacher_by_email", lambda e: by_email.get(e))
     monkeypatch.setattr(db, "get_teacher_by_id", lambda i: teachers.get(i))
-    created = state["created"] = []
-
-    def create_teacher(email, password_hash, name, role="teacher", school_id=None):
-        row = dict(id=100 + len(created), email=email, password_hash=password_hash, name=name,
-                   role=role, school_id=school_id, is_active=True)
-        created.append(row)
-        teachers[row["id"]] = by_email[email] = row
-        return row
-    monkeypatch.setattr(db, "create_teacher", create_teacher)
-    monkeypatch.setattr(db, "get_school", lambda i: {"id": i, "name": "測試國小"})
+    state["scores"] = []
+    monkeypatch.setattr(db, "get_all_scores", lambda: list(state["scores"]))
     monkeypatch.setattr(db, "record_login_attempt",
                         lambda e, ip, ok: state["attempts"].append((e, ip, ok)))
     monkeypatch.setattr(db, "purge_old_login_attempts", lambda before: None)
@@ -99,7 +91,7 @@ def test_login_success_and_dashboard(client):
     r = _login(client, "t@x.tw")
     assert r.status_code == 302
     html = client.get("/teacher/").get_data(as_text=True)
-    assert "王老師" in html and "測試國小" in html
+    assert "王老師" in html and "目前還沒有成績紀錄" in html
 
 
 def test_login_wrong_password_and_unknown_email_look_the_same(client):
@@ -175,57 +167,68 @@ def test_session_cookie_flags():
     assert app.config["SESSION_COOKIE_HTTPONLY"] is True
 
 
-# ── 註冊（白名單）─────────────────────────────────────────────
-def _register(client, email="me@x.tw", name="我", pw="long-enough-pw-1", pw2=None):
-    return client.post("/teacher/register", data={
-        "email": email, "name": name, "password": pw,
-        "password2": pw if pw2 is None else pw2, "csrf_token": _csrf(client, "/teacher/register")})
-
-
-@pytest.fixture
-def reg_open(monkeypatch):
-    monkeypatch.setenv("REGISTER_ALLOWED_EMAILS", "me@x.tw, other@x.tw")
-
-
-def test_register_closed_when_no_whitelist(client, monkeypatch):
-    monkeypatch.delenv("REGISTER_ALLOWED_EMAILS", raising=False)
+# ── 註冊已移除 ────────────────────────────────────────────────
+def test_register_route_is_gone(client, monkeypatch):
+    monkeypatch.setenv("REGISTER_ALLOWED_EMAILS", "me@x.tw")     # 舊環境變數殘留也不會打開註冊
     assert client.get("/teacher/register").status_code == 404
+    assert client.post("/teacher/register", data={"email": "me@x.tw"}).status_code == 404
     assert "註冊" not in client.get("/teacher/login").get_data(as_text=True)
 
 
-def test_register_whitelisted_email_creates_admin_who_can_login(client, fake_db, reg_open):
-    r = _register(client)
-    assert r.status_code == 200 and "註冊完成" in r.get_data(as_text=True)
-    assert fake_db["created"][0]["role"] == "admin"
-    assert fake_db["created"][0]["password_hash"] != "long-enough-pw-1"
-    assert _login(client, "me@x.tw", "long-enough-pw-1").status_code == 302
+# ── 學生班級格式 ──────────────────────────────────────────────
+def test_student_login_normalizes_class(client):
+    r = client.post("/auth/login", json={"class_name": "三年二班", "seat_no": 5, "name": "小明"})
+    assert r.status_code == 200 and r.get_json()["class_name"] == "3年02班"
+    assert client.get("/auth/me").get_json()["class_name"] == "3年02班"
 
 
-def test_register_rejects_email_not_in_whitelist(client, fake_db, reg_open):
-    assert _register(client, email="stranger@x.tw").status_code == 403
-    assert fake_db["created"] == []
-
-
-def test_register_validation(client, fake_db, reg_open):
-    assert _register(client, pw="short").status_code == 400
-    assert _register(client, pw2="different-pw-123").status_code == 400
-    assert _register(client, name="  ").status_code == 400
-    assert _register(client, pw="a" * 80).status_code == 400
-    assert fake_db["created"] == []
-
-
-def test_register_duplicate_email(client, reg_open):
-    _register(client)
-    assert _register(client).status_code == 409
-
-
-def test_register_requires_csrf(client, reg_open):
-    r = client.post("/teacher/register", data={
-        "email": "me@x.tw", "name": "我", "password": "long-enough-pw-1", "password2": "long-enough-pw-1"})
+def test_student_login_rejects_unknown_class(client):
+    r = client.post("/auth/login", json={"class_name": "abc", "seat_no": 5, "name": "小明"})
     assert r.status_code == 400
+    assert r.get_json()["error"] == "班級格式無法辨識，請填寫如：三年二班、3甲"
 
 
-def test_register_is_rate_limited(client, reg_open):
-    for _ in range(teacher_auth.MAX_FAIL_PER_EMAIL):
-        _register(client, pw="short")
-    assert _register(client).status_code == 429
+def test_old_session_class_is_normalized_on_read(client, monkeypatch):
+    saved = []
+    monkeypatch.setattr("idiom.routes.save_score", lambda *a: saved.append(a) or {})
+    for raw, expected in (("一甲", "1年01班"), ("火星班", "火星班")):
+        with client.session_transaction() as sess:
+            sess["student"] = {"class_name": raw, "seat_no": 3, "name": "小華"}
+        assert client.get("/auth/me").get_json()["class_name"] == expected
+        r = client.post("/leaderboard", json={"score": 8, "total": 15, "duration": 60})
+        assert r.status_code == 200 and saved[-1][4] == expected
+
+
+# ── 教師成績頁 ────────────────────────────────────────────────
+def test_gradebook_requires_login(client, fake_db):
+    fake_db["scores"] = [dict(id=1, class_name="一甲", seat_no=1, name="小明", score=9, total=15,
+                              duration=30, grade="junior", created_at="2026-11-01T00:00:00+00:00")]
+    r = client.get("/teacher/", headers={"Accept": "text/html"})
+    assert r.status_code == 302 and "小明" not in r.get_data(as_text=True)
+
+
+def test_gradebook_page_shows_history_and_escapes_input(client, fake_db):
+    fake_db["scores"] = [
+        dict(id=1, class_name="一甲", seat_no=3, name="<b>小明</b>", score=9, total=15, duration=75,
+             grade="elementary_low", created_at="2026-11-01T02:05:00+00:00"),
+        dict(id=2, class_name="1年甲班", seat_no=3, name="<b>小明</b>", score=12, total=15, duration=61,
+             grade=None, created_at="2026-11-02T16:30:00Z"),
+        dict(id=3, class_name="火星", seat_no=1, name="外星人", score=1, total=15, duration=5,
+             grade="junior", created_at="2026-11-01T00:00:00+00:00"),
+    ]
+    _login(client, "admin@x.tw")
+    html = client.get("/teacher/").get_data(as_text=True)
+    assert "&lt;b&gt;小明&lt;/b&gt;" in html and "<b>小明</b>" not in html
+    assert html.count("&lt;b&gt;小明&lt;/b&gt;") == 1                # 同一位學生只顯示一次姓名
+    assert html.index("2026-11-01 10:05") < html.index("2026-11-03 00:30")   # UTC+8、由舊到新
+    assert "9/15" in html and "01:15" in html and "國小低年級" in html and "—" in html
+    assert html.index("1年01班") < html.index("未分類") < html.index("火星")
+
+
+def test_gradebook_page_handles_db_error(client, monkeypatch):
+    def boom():
+        raise RuntimeError("down")
+    monkeypatch.setattr(db, "get_all_scores", boom)
+    _login(client, "admin@x.tw")
+    r = client.get("/teacher/")
+    assert r.status_code == 200 and "成績讀取失敗" in r.get_data(as_text=True)

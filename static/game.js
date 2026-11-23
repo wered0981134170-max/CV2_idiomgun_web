@@ -37,6 +37,7 @@ const Game = (() => {
     if      (state === 'start')  doStart(gs);
     else if (state === 'play')   doPlay(gs);
     else if (state === 'result') doResult(gs);
+    else if (state === 'advisor') doAdvisor(gs);
     fh = requestAnimationFrame(frame);
   }
 
@@ -69,11 +70,23 @@ const Game = (() => {
     Cursor.update(gs.x, gs.y, gs.thumbActive, 0);
 
     if (aim.fired) {
-      selectedDifficulty = diffBtns[aim.target].grade;
+      const grade = diffBtns[aim.target].grade;
       Aim.reset();
+      if (grade === 'advisor') { enterAdvisor(); return; }
+      selectedDifficulty = grade;
       beginGame();
     }
   }
+
+  // ── 學習顧問室（畫面與錯題本見 advisor.js） ───────────────
+  function enterAdvisor() {
+    state = 'advisor';
+    hide($('screen-start')); hide($('lb-sidebar')); hide($('advisor-entry'));
+    $('screen-advisor').style.display = 'flex';
+    Advisor.enter();
+  }
+
+  function doAdvisor(gs) { Advisor.update(gs); }
 
   // ── 答題畫面 ─────────────────────────────────────────────
   function doPlay(gs) {
@@ -109,7 +122,7 @@ const Game = (() => {
   // ── 結果畫面（手動繼續） ─────────────────────────────────
   function doResult(gs) {
     if (autoNextTimer !== null || proceedLock) return;
-    const ring = $('result-ring'), CIRC = 113.1;
+    const ring = $('result-ring'), CIRC = 226.19;
     Cursor.update(gs.x, gs.y, gs.thumbActive, 0);
     if (gs.thumbActive) {
       if (!resultHover) resultHover = performance.now();
@@ -222,7 +235,7 @@ const Game = (() => {
     score = 0; questionsAnswered = 0; actionLock = false;
     gameStartTime = Date.now();
     Audio.onStart();
-    hide($('screen-start')); hide($('lb-sidebar'));
+    hide($('screen-start')); hide($('lb-sidebar')); hide($('advisor-entry'));
     show($('hud')); show($('timer-bar-wrap')); show($('hint-text'));
     loadNextQuestion();
   }
@@ -275,11 +288,17 @@ const Game = (() => {
       idiom:       currentQ.idiom,
       score,
       explanation: EXPLANATIONS[currentQ.idiom] || currentQ.explanation || '',
+      qType:       currentQ.type,
+      chosen:      chosen,
+      wrongChar:   currentQ.type === 'wrong' ? currentQ.answer : null,
+      teaching:    currentQ.teaching || null,
+      options:     currentQ.options || [],
     };
 
     if (correct) { Effects.onCorrect(fx, fy); Audio.onCorrect(); }
     else         { Effects.onWrong(fx, fy);   Audio.onWrong();   }
 
+    Advisor.record(currentQ, d);
     questionsAnswered++;
     hideGame(); hideCompose();
     showResultCard(d, false);
@@ -298,32 +317,200 @@ const Game = (() => {
       idiom:       currentQ.idiom,
       score,
       explanation: EXPLANATIONS[currentQ.idiom] || currentQ.explanation || '',
+      qType:       currentQ.type,
+      chosen:      null,
+      wrongChar:   currentQ.type === 'wrong' ? currentQ.answer : null,
+      teaching:    currentQ.teaching || null,
+      options:     currentQ.options || [],
     };
 
+    Advisor.record(currentQ, d);
     questionsAnswered++;
     hideGame(); hideCompose();
     showResultCard(d, true);
   }
 
+  // ── 學習卡（答錯／超時，附成語解析） ───────────────────────
+
+  // JSON 中 application_answers / application_notes 為 [{key: note}, ...] 格式
+  function noteFromArr(arr, key) {
+    if (!Array.isArray(arr) || !key) return null;
+    for (const obj of arr) {
+      if (obj && Object.prototype.hasOwnProperty.call(obj, key)) return obj[key];
+    }
+    return null;
+  }
+
+  function appendArrow(el, fromLabel, from, toLabel, to) {
+    el.appendChild(document.createTextNode(`　${fromLabel}`));
+    const b = document.createElement('b'); b.textContent = from; el.appendChild(b);
+    el.appendChild(document.createTextNode(` → ${toLabel}`));
+    const b2 = document.createElement('b'); b2.className = 'rs-correct'; b2.textContent = to; el.appendChild(b2);
+  }
+
+  function renderLearnHeader(status, d) {
+    const el = $('result-status');
+    el.innerHTML = '';
+    el.appendChild(document.createTextNode(status + '：'));
+
+    if (d.qType === 'wrong' && d.wrongChar && d.wrongChar !== d.correct_str) {
+      appendArrow(el, '選了', d.wrongChar, '正確答案', d.correct_str);
+      return;
+    }
+    if (d.qType === 'application' && d.chosen && d.chosen !== d.correct_str) {
+      appendArrow(el, '你選了', d.chosen, '正確答案', d.correct_str);
+      return;
+    }
+
+    if (d.chosen && d.chosen !== d.correct_str) {
+      el.appendChild(document.createTextNode('你選：'));
+      const b = document.createElement('b'); b.textContent = d.chosen; el.appendChild(b);
+      el.appendChild(document.createTextNode('　'));
+    }
+    const sub = document.createElement('span');
+    sub.className = 'rs-sub';
+    sub.appendChild(document.createTextNode('正確：'));
+    const b2 = document.createElement('b'); b2.className = 'rs-correct'; b2.textContent = d.correct_str; sub.appendChild(b2);
+    el.appendChild(sub);
+  }
+
+  // 辨析清單的單一列（正確／混淆／其他選項皆共用）
+  function noteRow(kind, tag, label, def) {
+    if (!def) return '';
+    return `<div class="note-row ${kind}">
+      <span class="note-tag">${tag}</span>
+      <span class="note-char">${label}</span>
+      <span class="note-def">${def}</span>
+    </div>`;
+  }
+
+  function renderTypoLearnCard(d) {
+    const t           = d.teaching || {};
+    const breakdown   = t.breakdown || [];
+    const correctCh   = d.correct_str;
+    const wrongCh     = d.wrongChar;
+    const chars       = breakdown.length ? breakdown.map(b => b.char) : [...(d.idiom || '')];
+
+    $('learn-typo-chars').innerHTML = chars.map(ch =>
+      `<div class="typo-char-box ${ch === correctCh ? 'hl' : ''}">${ch}</div>`
+    ).join('');
+
+    const correctNote = correctCh && t.typos_answer && t.typos_answer[correctCh];
+    const wrongNote    = wrongCh && t.options_notes && t.options_notes[wrongCh];
+
+    const rows = noteRow('correct', '正確', correctCh, correctNote)
+               + noteRow('wrong',   '混淆', wrongCh,   wrongNote);
+
+    const noteEl = $('learn-typo-note');
+    if (rows) { noteEl.innerHTML = rows; show(noteEl); }
+    else      { hide(noteEl); }
+  }
+
+  function renderApplicationLearnCard(d) {
+    const t            = d.teaching || {};
+    const correctIdiom = d.correct_str;
+    const chosenIdiom  = d.chosen;
+    const options      = (d.options && d.options.length) ? d.options : [correctIdiom];
+
+    const exEl = $('learn-app-example');
+    if (t.example) {
+      const marked = correctIdiom ? t.example.split(correctIdiom).join(`<span class="hl">${correctIdiom}</span>`) : t.example;
+      exEl.innerHTML = `<span class="ex-label">📖 完整例句</span>${marked}`;
+      show(exEl);
+    } else {
+      hide(exEl);
+    }
+
+    const rows = options.map(opt => {
+      const isCorrect     = opt === correctIdiom;
+      const isChosenWrong = !isCorrect && opt === chosenIdiom;
+      const def  = isCorrect
+        ? (noteFromArr(t.application_answers, opt) || t.plain || d.meaning || '')
+        : noteFromArr(t.application_notes, opt);
+      const kind = isCorrect ? 'correct' : (isChosenWrong ? 'wrong' : 'other');
+      const tag  = isCorrect ? '✓ 正確' : (isChosenWrong ? '✕ 你選的' : '其他選項');
+      return noteRow(kind, tag, opt, def);
+    }).join('');
+
+    const listEl = $('learn-app-list');
+    if (rows) { listEl.innerHTML = rows; show(listEl); }
+    else      { hide(listEl); }
+  }
+
+  function renderGeneralLearnCard(d) {
+    const t         = d.teaching || {};
+    const breakdown = t.breakdown || [];
+
+    // 組字題答錯時，成語中「放錯位置」的字標紅、breakdown 卡片高亮（超時未作答則全部）
+    const answer = d.correct_str || '';
+    const chosen = d.chosen || '';
+    const isWrongAt = i => d.qType === 'compose' && chosen[i] !== answer[i];
+    $('learn-idiom').innerHTML = [...(d.idiom || '')].map((ch, i) =>
+      isWrongAt(i) ? `<span class="hl">${ch}</span>` : ch).join('');
+    $('learn-meaning').textContent = t.plain || d.meaning || '';
+
+    if (breakdown.length) {
+      $('learn-breakdown').innerHTML = breakdown.map((b, i) =>
+        `<div class="learn-char ${isWrongAt(i) ? 'hl' : ''}">
+           <div class="lc-char">${b.char}</div>
+           <div class="lc-def">${b.meaning || ''}</div>
+         </div>`
+      ).join('');
+      show($('learn-breakdown'));
+    } else {
+      hide($('learn-breakdown'));
+    }
+
+    const exEl = $('learn-example');
+    if (t.example) { exEl.textContent = `💬 ${t.example}`; show(exEl); }
+    else            hide(exEl);
+  }
+
+  function renderLearnCard(d) {
+    hide($('learn-general')); hide($('learn-typo')); hide($('learn-application'));
+    if (d.qType === 'wrong') {
+      show($('learn-typo'));
+      renderTypoLearnCard(d);
+    } else if (d.qType === 'application') {
+      show($('learn-application'));
+      renderApplicationLearnCard(d);
+    } else {
+      show($('learn-general'));
+      renderGeneralLearnCard(d);
+    }
+  }
+
   // ── 結果卡片 ─────────────────────────────────────────────
   function showResultCard(d, autoNext) {
-    $('result-card').className = 'result-card ' + d.result;
+    const isLearn = (d.result === 'wrong' || d.result === 'timeout') && !!d.teaching;
+    $('result-card').className = 'result-card ' + d.result + (isLearn ? ' learn' : '');
+
     const msgs = {
       correct: ['○ 答對了！', d.meaning || `錯字正是「${d.correct_str}」`, 'correct'],
       wrong:   ['✕ 答錯了',   d.meaning || `正確答案是「${d.correct_str}」`, 'wrong'],
       timeout: ['⏱ 時間到',   d.meaning || `正確答案是「${d.correct_str}」`, 'timeout'],
     };
     const [status, detail, cls] = msgs[d.result] || msgs.timeout;
-    $('result-status').textContent = status;
-    $('result-status').className   = 'result-status ' + cls;
-    $('result-detail').textContent = detail;
-    $('result-idiom').textContent  = `成語：${d.idiom}　分數：${d.score}`;
+    $('result-status').className = 'result-status ' + cls;
 
-    const expEl = $('result-explanation'), expText = $('explanation-text');
-    if ((d.result === 'wrong' || d.result === 'timeout') && d.explanation) {
-      expText.textContent = d.explanation; show(expEl);
+    if (isLearn) {
+      renderLearnHeader(status, d);
+      renderLearnCard(d);
+      hide($('result-detail')); hide($('result-idiom')); hide($('result-explanation'));
+      show($('result-learn'));
     } else {
-      hide(expEl);
+      $('result-status').textContent = status;
+      $('result-detail').textContent = detail;
+      $('result-idiom').textContent  = `成語：${d.idiom}　分數：${d.score}`;
+      show($('result-detail')); show($('result-idiom'));
+      hide($('result-learn'));
+
+      const expEl = $('result-explanation'), expText = $('explanation-text');
+      if ((d.result === 'wrong' || d.result === 'timeout') && d.explanation) {
+        expText.textContent = d.explanation; show(expEl);
+      } else {
+        hide(expEl);
+      }
     }
 
     resultHoverTime = (d.result === 'wrong') ? 5.0 : HOVER_TIME;
@@ -339,7 +526,7 @@ const Game = (() => {
       show($('result-next'));
       $('result-ring-wrap').style.display = 'flex';
       hide($('result-auto-hint'));
-      $('result-ring').style.strokeDashoffset = '113.1';
+      $('result-ring').style.strokeDashoffset = '226.19';
       resultHover = null;
     }
     show($('screen-result'));
@@ -361,7 +548,7 @@ const Game = (() => {
     if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
     hideGame();
     hide($('hud')); hide($('timer-bar-wrap')); hide($('hint-text')); hide($('screen-result'));
-    hide($('lb-sidebar'));
+    hide($('lb-sidebar')); hide($('advisor-entry'));
     show($('screen-final'));
     Audio.onFinish();
 
@@ -420,6 +607,7 @@ const Game = (() => {
   async function loadSidebarLeaderboard() {
     const listEl = $('lb-sidebar-list');
     show($('lb-sidebar'));
+    $('advisor-entry').style.display = 'flex';
     try {
       const rows = await (await fetch('/leaderboard')).json();
       if (!rows.length) {
@@ -621,14 +809,20 @@ const Game = (() => {
       else         {              Effects.onWrong(innerWidth / 2, innerHeight / 2);   Audio.onWrong();   }
       questionsAnswered++;
       hideCompose();
-      showResultCard({
+      const cd = {
         result:      correct ? 'correct' : 'wrong',
         correct_str: composeSt.answer,
         meaning:     currentQ.meaning || '',
         idiom:       currentQ.idiom,
         score,
         explanation: EXPLANATIONS[currentQ.idiom] || currentQ.explanation || '',
-      }, false);
+        qType:       currentQ.type,
+        chosen:      assembled,
+        wrongChar:   null,
+        teaching:    currentQ.teaching || null,
+      };
+      Advisor.record(currentQ, cd);
+      showResultCard(cd, false);
     }
   }
 
@@ -649,7 +843,7 @@ const Game = (() => {
     composeSt.slots = [null, null, null, null]; composeSt.pool = [];
     composeSt.dragChar = null; composeSt.dragSource = null;
     Aim.reset(); Audio.resetTick();
-    hide($('screen-final')); hide($('screen-result'));
+    hide($('screen-final')); hide($('screen-result')); hide($('screen-advisor'));
     hideGame(); hideCompose();
     hide($('hud')); hide($('timer-bar-wrap')); hide($('hint-text'));
     show($('screen-start'));

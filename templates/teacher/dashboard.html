@@ -1,11 +1,43 @@
 {% extends "teacher/base.html" %}
-{% block title %}首頁{% endblock %}
+{% block title %}成績{% endblock %}
 {% block content %}
-<section class="card">
-  <h1>歡迎，{{ current_user.name }}</h1>
-  <p class="hint">
-    {% if school %}學校：{{ school.name }}{% elif current_user.is_admin %}管理員（不屬於特定學校）{% endif %}
-  </p>
-  <p>班級、成績與成語管理功能將在後續階段加入。</p>
+<h1>學生成績</h1>
+{% if error %}<p class="alert" role="alert">{{ error }}</p>{% endif %}
+{% if not classes and not error %}
+<section class="card"><p class="hint">目前還沒有成績紀錄</p></section>
+{% endif %}
+{% for cls in classes %}
+<section class="card class-card">
+  <h2>{{ cls.title }}</h2>
+  {% if cls.unclassified %}<p class="hint">班級欄空白或無法被辨識，記錄由為學生當時輸入的「原始班級」。</p>{% endif %}
+  <div class="table-wrap">
+    <table class="scores">
+      <thead>
+        <tr>
+          {% if cls.unclassified %}<th>原始班級</th>{% endif %}
+          <th>座號</th><th>姓名</th><th>第幾次</th><th>遊玩時間</th><th>分數</th><th>難度</th><th>用時</th>
+        </tr>
+      </thead>
+      {% for st in cls.students %}
+      <tbody class="student">
+        {% for p in st.plays %}
+        <tr>
+          {% if loop.first %}
+          {% if cls.unclassified %}<td rowspan="{{ st.plays|length }}">{{ st.raw_class or "（空白）" }}</td>{% endif %}
+          <td rowspan="{{ st.plays|length }}" class="num">{{ st.seat_no if st.seat_no is not none else "—" }}</td>
+          <td rowspan="{{ st.plays|length }}">{{ st.name }}</td>
+          {% endif %}
+          <td class="num">{{ p.n }}</td>
+          <td class="nowrap">{{ p.time }}</td>
+          <td class="num">{{ p.score }}</td>
+          <td class="nowrap">{{ p.grade }}</td>
+          <td class="num">{{ p.duration }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% endfor %}
+    </table>
+  </div>
 </section>
+{% endfor %}
 {% endblock %}
