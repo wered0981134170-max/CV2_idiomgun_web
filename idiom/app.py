@@ -58,4 +58,4 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port, debug=debug, threaded=True)
 
 
-# python -m idiom.app
+# uv run python -m idiom.app  
